@@ -26,6 +26,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import { CAPACITY_TYPES, METRO_STATIONS, ROOF_TYPES, SURFACE_TYPES } from "./stadium-constants"
 import { uploadService } from "@/services/upload"
 import { Loader2, Plus, Trash, Upload } from "lucide-react"
@@ -44,6 +52,7 @@ interface StadiumFormProps {
 
 export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps) {
     const [uploading, setUploading] = useState(false)
+    const [showSaveDialog, setShowSaveDialog] = useState(false)
 
     const defaultValues: Partial<StadiumFormValues> = {
         ...initialData,
@@ -198,417 +207,80 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
         }
     }
 
+    const handlePreSave = async () => {
+        // validate all fields
+        const isValid = await form.trigger();
+
+        if (!isValid) {
+            // Find which tab has error
+            for (const tab of tabs) {
+                const fields = tabFields[tab];
+                const isTabValid = await form.trigger(fields as any);
+                if (!isTabValid) {
+                    setCurrentTab(tab);
+                    // Optional: toast error
+                    return;
+                }
+            }
+        }
+
+        setShowSaveDialog(true);
+    }
+
     return (
-        <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
-                <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-4">
-                        <TabsTrigger value="main">Asosiy</TabsTrigger>
-                        <TabsTrigger value="info">Ma&apos;lumotlar</TabsTrigger>
-                        <TabsTrigger value="location">Manzil</TabsTrigger>
-                        <TabsTrigger value="media">Media</TabsTrigger>
-                    </TabsList>
+        <>
+            <Form {...form}>
+                <form className="space-y-8">
+                    <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
+                        <TabsList className="grid w-full grid-cols-4">
+                            <TabsTrigger value="main">Asosiy</TabsTrigger>
+                            <TabsTrigger value="info">Ma&apos;lumotlar</TabsTrigger>
+                            <TabsTrigger value="location">Manzil</TabsTrigger>
+                            <TabsTrigger value="media">Media</TabsTrigger>
+                        </TabsList>
 
-                    <TabsContent value="main" className="space-y-4 pt-4">
+                        <TabsContent value="main" className="space-y-4 pt-4">
 
-                        <FormField
-                            control={form.control}
-                            name="is_active"
-                            render={({ field }) => (
-                                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                                    <FormControl>
-                                        <Checkbox
-                                            checked={field.value}
-                                            onCheckedChange={field.onChange}
-                                        />
-                                    </FormControl>
-                                    <div className="space-y-1 leading-none">
-                                        <FormLabel>
-                                            Aktiv holatda
-                                        </FormLabel>
-                                        <FormDescription>
-                                            Stadion saytda ko&apos;rinadimi?
-                                        </FormDescription>
-                                    </div>
-                                </FormItem>
-                            )}
-                        />
-
-                        <div className="grid grid-cols-2 gap-4">
                             <FormField
                                 control={form.control}
-                                name="capacity"
+                                name="is_active"
                                 render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Sig&apos;imi</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Sig'imni tanlang" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {CAPACITY_TYPES.map((type) => (
-                                                    <SelectItem key={type.value} value={type.value}>
-                                                        {type.label}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="price_per_hour"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Soatiga narx (UZS)</FormLabel>
+                                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                                         <FormControl>
-                                            <Input type="number" step="1000" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                                control={form.control}
-                                name="surface_type"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Maydon qoplamasi</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Qoplamani tanlang" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {SURFACE_TYPES.map((type) => (
-                                                    <SelectItem key={type.value} value={type.value}>
-                                                        {type.label}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="roof_type"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Tom turi</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Tom turini tanlang" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {ROOF_TYPES.map((type) => (
-                                                    <SelectItem key={type.value} value={type.value}>
-                                                        {type.label}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-
-                        <Separator className="my-2" />
-
-                        <div>
-                            <FormLabel>Telefon raqamlar</FormLabel>
-                            <div className="space-y-2 mt-2">
-                                {fields.map((field, index) => (
-                                    <div key={field.id} className="flex gap-2">
-                                        <FormField
-                                            control={form.control}
-                                            name={`phones.${index}.value`}
-                                            render={({ field }) => (
-                                                <FormItem className="flex-1">
-                                                    <FormControl>
-                                                        <div className="flex items-center">
-                                                            <span className="mr-2 text-sm text-muted-foreground">+998</span>
-                                                            <Input
-                                                                {...field}
-                                                                placeholder="(90) 123-45-67"
-                                                                value={(field.value || "").replace(/^\+998\s?/, '')}
-                                                                onChange={(e) => {
-                                                                    let value = e.target.value.replace(/\D/g, '').substring(0, 9);
-                                                                    if (value.length > 0) {
-                                                                        if (value.length <= 2) {
-                                                                            value = `(${value}`;
-                                                                        } else if (value.length <= 5) {
-                                                                            value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
-                                                                        } else if (value.length <= 7) {
-                                                                            value = `(${value.slice(0, 2)}) ${value.slice(2, 5)}-${value.slice(5)}`;
-                                                                        } else {
-                                                                            value = `(${value.slice(0, 2)}) ${value.slice(2, 5)}-${value.slice(5, 7)}-${value.slice(7, 9)}`;
-                                                                        }
-                                                                    }
-                                                                    field.onChange(`+998 ${value}`);
-                                                                }}
-                                                            />
-                                                        </div>
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <Button
-                                            type="button"
-                                            variant="destructive"
-                                            size="icon"
-                                            onClick={() => remove(index)}
-                                            disabled={fields.length === 1}
-                                        >
-                                            <Trash className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                ))}
-                            </div>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="mt-2"
-                                onClick={() => append({ value: "" })}
-                            >
-                                <Plus className="mr-2 h-4 w-4" /> Raqam qo&apos;shish
-                            </Button>
-                        </div>
-
-
-                    </TabsContent>
-
-                    <TabsContent value="info" className="space-y-4 pt-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                                control={form.control}
-                                name="name_uz"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Nomi 🇺🇿</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                placeholder="Chilonzor Arena"
-                                                {...field}
-                                                onChange={(e) => {
-                                                    field.onChange(e);
-                                                    const slug = e.target.value
-                                                        .toLowerCase()
-                                                        .replace(/\s+/g, '-')
-                                                        .replace(/[^a-z0-9-]/g, '');
-                                                    form.setValue("slug", slug, { shouldValidate: true });
-                                                }}
+                                            <Checkbox
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
                                             />
                                         </FormControl>
-                                        <FormMessage />
+                                        <div className="space-y-1 leading-none">
+                                            <FormLabel>
+                                                Aktiv holatda
+                                            </FormLabel>
+                                            <FormDescription>
+                                                Stadion saytda ko&apos;rinadimi?
+                                            </FormDescription>
+                                        </div>
                                     </FormItem>
                                 )}
                             />
-                            <FormField
-                                control={form.control}
-                                name="name_ru"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Название 🇷🇺</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="Чилонзор Арена" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
 
-                        <FormField
-                            control={form.control}
-                            name="slug"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Slug (URL) 🔗</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder="stadion-nomi"
-                                            {...field}
-                                            onChange={(e) => {
-                                                // Auto-format: lowercase, replace spaces with dashes, remove invalid chars
-                                                const value = e.target.value
-                                                    .toLowerCase()
-                                                    .replace(/\s+/g, '-')
-                                                    .replace(/[^a-z0-9-]/g, '');
-                                                field.onChange(value);
-                                            }}
-                                        />
-                                    </FormControl>
-                                    <FormDescription>
-                                        Bu sizning stadioningizning internetdagi manzili bo&apos;ladi. Faqat lotin harflari va raqamlar ishating.
-                                    </FormDescription>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                                control={form.control}
-                                name="description_uz"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Tavsif 🇺🇿</FormLabel>
-                                        <FormControl>
-                                            <Textarea className="h-32" placeholder="Stadion haqida..." {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="description_ru"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Описание 🇷🇺</FormLabel>
-                                        <FormControl>
-                                            <Textarea className="h-32" placeholder="О стадионе..." {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-                    </TabsContent>
-
-                    <TabsContent value="location" className="space-y-4 pt-4">
-                        <div className="space-y-2">
-                            <FormLabel className="sr-only">Joylashuv (Xarita)</FormLabel>
-
-                            <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 items-start">
-                                {/* Left Side: Map Preview (Square) */}
-                                <div className="w-[200px] h-[200px] shrink-0">
-                                    <LocationPicker
-                                        latitude={form.watch("latitude")}
-                                        longitude={form.watch("longitude")}
-                                        className="h-full w-full aspect-square"
-                                        onLocationSelect={(lat, lng, addressUz, addressRu) => {
-                                            form.setValue("latitude", lat)
-                                            form.setValue("longitude", lng)
-                                            if (addressUz) form.setValue("address_uz", addressUz);
-                                            // Fallback to Uzbek address if Russian fetch failed or is same
-                                            if (addressRu) {
-                                                form.setValue("address_ru", addressRu);
-                                            } else if (addressUz) {
-                                                form.setValue("address_ru", addressUz);
-                                            }
-                                        }}
-                                    />
-                                </div>
-
-                                {/* Right Side: Address Inputs */}
-                                <div className="flex flex-col gap-4 w-full">
-                                    <FormField
-                                        control={form.control}
-                                        name="address_uz"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Manzil 🇺🇿</FormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="Toshkent sh., ..." {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="address_ru"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Адрес 🇷🇺</FormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="г. Ташкент, ..." {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4 hidden">
-                                <FormField
-                                    control={form.control}
-                                    name="latitude"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormControl>
-                                                <Input type="number" step="any" {...field} />
-                                            </FormControl>
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="longitude"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormControl>
-                                                <Input type="number" step="any" {...field} />
-                                            </FormControl>
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-                        </div>
-
-                        <FormField
-                            control={form.control}
-                            name="is_metro_near"
-                            render={({ field }) => (
-                                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                                    <FormControl>
-                                        <Checkbox
-                                            checked={field.value}
-                                            onCheckedChange={field.onChange}
-                                        />
-                                    </FormControl>
-                                    <div className="space-y-1 leading-none">
-                                        <FormLabel>
-                                            Metro yaqinmi?
-                                        </FormLabel>
-                                    </div>
-                                </FormItem>
-                            )}
-                        />
-
-                        {form.watch("is_metro_near") && (
                             <div className="grid grid-cols-2 gap-4">
                                 <FormField
                                     control={form.control}
-                                    name="metro_station"
+                                    name="capacity"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Metro bekati</FormLabel>
+                                            <FormLabel>Sig&apos;imi</FormLabel>
                                             <Select onValueChange={field.onChange} value={field.value}>
                                                 <FormControl>
                                                     <SelectTrigger>
-                                                        <SelectValue placeholder="Bekatni tanlang" />
+                                                        <SelectValue placeholder="Sig'imni tanlang" />
                                                     </SelectTrigger>
                                                 </FormControl>
-                                                <SelectContent className="max-h-[200px]">
-                                                    {METRO_STATIONS.map((station) => (
-                                                        <SelectItem key={station.value} value={station.value}>
-                                                            {station.label}
+                                                <SelectContent>
+                                                    {CAPACITY_TYPES.map((type) => (
+                                                        <SelectItem key={type.value} value={type.value}>
+                                                            {type.label}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
@@ -619,156 +291,550 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                 />
                                 <FormField
                                     control={form.control}
-                                    name="metro_distance"
+                                    name="price_per_hour"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Masofa (km)</FormLabel>
+                                            <FormLabel>Soatiga narx (UZS)</FormLabel>
                                             <FormControl>
-                                                <Input type="number" step="0.1" {...field} />
+                                                <Input type="number" step="1000" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}
                                 />
                             </div>
-                        )}
-                    </TabsContent>
-
-
-
-                    <TabsContent value="media" className="space-y-6 pt-4">
-                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
-                            {/* Card 1: Main Image (Asosiy) */}
-                            <FormItem className="col-span-1">
-                                <div className="relative group aspect-square rounded-xl border-2 border-dashed border-emerald-500/50 bg-emerald-50/10 hover:bg-emerald-50/20 transition-all flex flex-col items-center justify-center cursor-pointer overflow-hidden shadow-sm hover:shadow-md"
-                                    onClick={() => document.getElementById("main-image-input")?.click()}>
-
-                                    <Input
-                                        id="main-image-input"
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                        disabled={uploading}
-                                        onChange={(e) => handleImageUpload(e, "main_image")}
-                                    />
-
-                                    {form.watch("main_image") ? (
-                                        <>
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img src={form.watch("main_image")} alt="Main" className="h-full w-full object-cover" />
-                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                <span className="text-white text-xs font-semibold bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">O'zgartirish</span>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <div className="flex flex-col items-center gap-2 p-4 text-center">
-                                            <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
-                                                <Upload className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                                            </div>
-                                            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Rasm 1 (Asosiy)</span>
-                                            <span className="text-[10px] text-muted-foreground">Yuklash</span>
-                                        </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="surface_type"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Maydon qoplamasi</FormLabel>
+                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Qoplamani tanlang" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {SURFACE_TYPES.map((type) => (
+                                                        <SelectItem key={type.value} value={type.value}>
+                                                            {type.label}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
                                     )}
-                                    <div className="absolute top-2 right-2 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm z-10">
-                                        ASOSIY
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="roof_type"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Tom turi</FormLabel>
+                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Tom turini tanlang" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {ROOF_TYPES.map((type) => (
+                                                        <SelectItem key={type.value} value={type.value}>
+                                                            {type.label}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
+                            <Separator className="my-2" />
+
+                            <div>
+                                <FormLabel>Telefon raqamlar</FormLabel>
+                                <div className="space-y-2 mt-2">
+                                    {fields.map((field, index) => (
+                                        <div key={field.id} className="flex gap-2">
+                                            <FormField
+                                                control={form.control}
+                                                name={`phones.${index}.value`}
+                                                render={({ field }) => (
+                                                    <FormItem className="flex-1">
+                                                        <FormControl>
+                                                            <div className="flex items-center">
+                                                                <span className="mr-2 text-sm text-muted-foreground">+998</span>
+                                                                <Input
+                                                                    {...field}
+                                                                    placeholder="(90) 123-45-67"
+                                                                    value={(field.value || "").replace(/^\+998\s?/, '')}
+                                                                    onChange={(e) => {
+                                                                        let value = e.target.value.replace(/\D/g, '').substring(0, 9);
+                                                                        if (value.length > 0) {
+                                                                            if (value.length <= 2) {
+                                                                                value = `(${value}`;
+                                                                            } else if (value.length <= 5) {
+                                                                                value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+                                                                            } else if (value.length <= 7) {
+                                                                                value = `(${value.slice(0, 2)}) ${value.slice(2, 5)}-${value.slice(5)}`;
+                                                                            } else {
+                                                                                value = `(${value.slice(0, 2)}) ${value.slice(2, 5)}-${value.slice(5, 7)}-${value.slice(7, 9)}`;
+                                                                            }
+                                                                        }
+                                                                        field.onChange(`+998 ${value}`);
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="destructive"
+                                                size="icon"
+                                                onClick={() => remove(index)}
+                                                disabled={fields.length === 1}
+                                            >
+                                                <Trash className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="mt-2"
+                                    onClick={() => append({ value: "" })}
+                                >
+                                    <Plus className="mr-2 h-4 w-4" /> Raqam qo&apos;shish
+                                </Button>
+                            </div>
+
+
+                        </TabsContent>
+
+                        <TabsContent value="info" className="space-y-4 pt-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="name_uz"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Nomi 🇺🇿</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    placeholder="Chilonzor Arena"
+                                                    {...field}
+                                                    onChange={(e) => {
+                                                        field.onChange(e);
+                                                        const slug = e.target.value
+                                                            .toLowerCase()
+                                                            .replace(/\s+/g, '-')
+                                                            .replace(/[^a-z0-9-]/g, '');
+                                                        form.setValue("slug", slug, { shouldValidate: true });
+                                                    }}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="name_ru"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Название 🇷🇺</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Чилонзор Арена" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
+                            <FormField
+                                control={form.control}
+                                name="slug"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Slug (URL) 🔗</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                placeholder="stadion-nomi"
+                                                {...field}
+                                                onChange={(e) => {
+                                                    // Auto-format: lowercase, replace spaces with dashes, remove invalid chars
+                                                    const value = e.target.value
+                                                        .toLowerCase()
+                                                        .replace(/\s+/g, '-')
+                                                        .replace(/[^a-z0-9-]/g, '');
+                                                    field.onChange(value);
+                                                }}
+                                            />
+                                        </FormControl>
+                                        <FormDescription>
+                                            Bu sizning stadioningizning internetdagi manzili bo&apos;ladi. Faqat lotin harflari va raqamlar ishating.
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="description_uz"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Tavsif 🇺🇿</FormLabel>
+                                            <FormControl>
+                                                <Textarea className="h-32" placeholder="Stadion haqida..." {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="description_ru"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Описание 🇷🇺</FormLabel>
+                                            <FormControl>
+                                                <Textarea className="h-32" placeholder="О стадионе..." {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                        </TabsContent>
+
+                        <TabsContent value="location" className="space-y-4 pt-4">
+                            <div className="space-y-2">
+                                <FormLabel className="sr-only">Joylashuv (Xarita)</FormLabel>
+
+                                <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 items-start">
+                                    {/* Left Side: Map Preview (Square) */}
+                                    <div className="w-[200px] h-[200px] shrink-0">
+                                        <LocationPicker
+                                            latitude={form.watch("latitude")}
+                                            longitude={form.watch("longitude")}
+                                            className={`h-full w-full aspect-square ${form.formState.errors.latitude ? "!border-destructive/80 !border-solid ring-4 ring-destructive/20" : ""}`}
+                                            onLocationSelect={(lat, lng, addressUz, addressRu) => {
+                                                form.setValue("latitude", lat, { shouldValidate: true })
+                                                form.setValue("longitude", lng, { shouldValidate: true })
+                                                if (addressUz) form.setValue("address_uz", addressUz, { shouldValidate: true });
+                                                // Fallback to Uzbek address if Russian fetch failed or is same
+                                                if (addressRu) {
+                                                    form.setValue("address_ru", addressRu, { shouldValidate: true });
+                                                } else if (addressUz) {
+                                                    form.setValue("address_ru", addressUz, { shouldValidate: true });
+                                                }
+                                                // Trigger validation to clear errors and update state
+                                                form.trigger(["latitude", "longitude"]);
+                                            }}
+                                        />
+                                        {form.formState.errors.latitude && (
+                                            <p className="text-sm font-medium text-destructive mt-1">
+                                                {form.formState.errors.latitude.message}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Right Side: Address Inputs */}
+                                    <div className="flex flex-col gap-4 w-full">
+                                        <FormField
+                                            control={form.control}
+                                            name="address_uz"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Manzil 🇺🇿</FormLabel>
+                                                    <FormControl>
+                                                        <Input placeholder="Toshkent sh., ..." {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="address_ru"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Адрес 🇷🇺</FormLabel>
+                                                    <FormControl>
+                                                        <Input placeholder="г. Ташкент, ..." {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
                                     </div>
                                 </div>
-                                <FormMessage />
-                            </FormItem>
+                                <div className="grid grid-cols-2 gap-4 hidden">
+                                    <FormField
+                                        control={form.control}
+                                        name="latitude"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <Input type="number" step="any" {...field} />
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="longitude"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <Input type="number" step="any" {...field} />
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </div>
 
-                            {/* Cards 2-6: Gallery Slots */}
-                            {Array.from({ length: 5 }).map((_, i) => {
-                                const images = form.watch("images") || [];
-                                const hasImage = i < images.length;
-                                const imgUrl = images[i];
+                            <FormField
+                                control={form.control}
+                                name="is_metro_near"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                                        <FormControl>
+                                            <Checkbox
+                                                checked={field.value}
+                                                onCheckedChange={(checked) => {
+                                                    field.onChange(checked);
+                                                    if (!checked) {
+                                                        form.setValue("metro_station", "");
+                                                        form.setValue("metro_distance", 0);
+                                                    }
+                                                }}
+                                            />
+                                        </FormControl>
+                                        <div className="space-y-1 leading-none">
+                                            <FormLabel>
+                                                Metro yaqinmi?
+                                            </FormLabel>
+                                        </div>
+                                    </FormItem>
+                                )}
+                            />
 
-                                return (
-                                    <div key={i} className="relative aspect-square rounded-xl border border-dashed border-border bg-muted/20 hover:bg-muted/30 transition-all flex flex-col items-center justify-center overflow-hidden group">
-                                        {hasImage ? (
+                            {form.watch("is_metro_near") && (
+                                <div className="grid grid-cols-2 gap-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="metro_station"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Metro bekati</FormLabel>
+                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Bekatni tanlang" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent className="max-h-[200px]">
+                                                        {METRO_STATIONS.map((station) => (
+                                                            <SelectItem key={station.value} value={station.value}>
+                                                                {station.label}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="metro_distance"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Masofa (km)</FormLabel>
+                                                <FormControl>
+                                                    <Input type="number" step="0.1" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            )}
+                        </TabsContent>
+
+
+
+                        <TabsContent value="media" className="space-y-6 pt-4">
+                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+                                {/* Card 1: Main Image (Asosiy) */}
+                                <FormItem className="col-span-1">
+                                    <div className="relative group aspect-square rounded-xl border-2 border-dashed border-emerald-500/50 bg-emerald-50/10 hover:bg-emerald-50/20 transition-all flex flex-col items-center justify-center cursor-pointer overflow-hidden shadow-sm hover:shadow-md"
+                                        onClick={() => document.getElementById("main-image-input")?.click()}>
+
+                                        <Input
+                                            id="main-image-input"
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            disabled={uploading}
+                                            onChange={(e) => handleImageUpload(e, "main_image")}
+                                        />
+
+                                        {form.watch("main_image") ? (
                                             <>
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img src={imgUrl} alt={`Gallery ${i}`} className="h-full w-full object-cover" />
-                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                                    <Button
-                                                        type="button"
-                                                        variant="destructive"
-                                                        size="icon"
-                                                        className="h-8 w-8 rounded-full shadow-sm"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            const newImages = [...images];
-                                                            newImages.splice(i, 1);
-                                                            form.setValue("images", newImages);
-                                                        }}
-                                                    >
-                                                        <Trash className="h-4 w-4" />
-                                                    </Button>
+                                                <img src={form.watch("main_image")} alt="Main" className="h-full w-full object-cover" />
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <span className="text-white text-xs font-semibold bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">O'zgartirish</span>
                                                 </div>
                                             </>
                                         ) : (
-                                            <div
-                                                className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-4"
-                                                onClick={() => {
-                                                    // Trigger hidden input for gallery append
-                                                    document.getElementById("gallery-image-input")?.click();
-                                                }}
-                                            >
-                                                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center mb-2 group-hover:bg-background transition-colors shadow-sm">
-                                                    <Plus className="h-4 w-4 text-muted-foreground" />
+                                            <div className="flex flex-col items-center gap-2 p-4 text-center">
+                                                <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+                                                    <Upload className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                                                 </div>
-                                                <span className="text-xs font-medium text-muted-foreground">Rasm {i + 2}</span>
+                                                <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Rasm 1 (Asosiy)</span>
+                                                <span className="text-[10px] text-muted-foreground">Yuklash</span>
                                             </div>
                                         )}
+                                        <div className="absolute top-2 right-2 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm z-10">
+                                            ASOSIY
+                                        </div>
                                     </div>
-                                )
-                            })}
+                                    <FormMessage />
+                                </FormItem>
 
-                            {/* Hidden Input for Gallery Uploads */}
-                            <Input
-                                id="gallery-image-input"
-                                type="file"
-                                accept="image/*"
-                                multiple
-                                className="hidden"
-                                disabled={uploading}
-                                onChange={(e) => {
-                                    handleImageUpload(e, "images");
-                                    // Reset value to allow selecting same file again if needed
-                                    e.target.value = "";
-                                }}
-                            />
-                        </div>
+                                {/* Cards 2-6: Gallery Slots */}
+                                {Array.from({ length: 5 }).map((_, i) => {
+                                    const images = form.watch("images") || [];
+                                    const hasImage = i < images.length;
+                                    const imgUrl = images[i];
 
-                        {uploading && <div className="text-sm text-muted-foreground flex items-center justify-center py-4"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Rasmlar yuklanmoqda...</div>}
-                    </TabsContent>
-                </Tabs>
+                                    return (
+                                        <div key={i} className="relative aspect-square rounded-xl border border-dashed border-border bg-muted/20 hover:bg-muted/30 transition-all flex flex-col items-center justify-center overflow-hidden group">
+                                            {hasImage ? (
+                                                <>
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img src={imgUrl} alt={`Gallery ${i}`} className="h-full w-full object-cover" />
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                        <Button
+                                                            type="button"
+                                                            variant="destructive"
+                                                            size="icon"
+                                                            className="h-8 w-8 rounded-full shadow-sm"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                const newImages = [...images];
+                                                                newImages.splice(i, 1);
+                                                                form.setValue("images", newImages);
+                                                            }}
+                                                        >
+                                                            <Trash className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <div
+                                                    className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-4"
+                                                    onClick={() => {
+                                                        // Trigger hidden input for gallery append
+                                                        document.getElementById("gallery-image-input")?.click();
+                                                    }}
+                                                >
+                                                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center mb-2 group-hover:bg-background transition-colors shadow-sm">
+                                                        <Plus className="h-4 w-4 text-muted-foreground" />
+                                                    </div>
+                                                    <span className="text-xs font-medium text-muted-foreground">Rasm {i + 2}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )
+                                })}
 
-                <div className="flex justify-between">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handlePrevious}
-                        disabled={currentTab === "main" || uploading}
-                        className={currentTab === "main" ? "invisible" : ""}
-                    >
-                        Avvalgisi
-                    </Button>
+                                {/* Hidden Input for Gallery Uploads */}
+                                <Input
+                                    id="gallery-image-input"
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    className="hidden"
+                                    disabled={uploading}
+                                    onChange={(e) => {
+                                        handleImageUpload(e, "images");
+                                        // Reset value to allow selecting same file again if needed
+                                        e.target.value = "";
+                                    }}
+                                />
+                            </div>
 
-                    {currentTab === "media" ? (
-                        <Button type="submit" disabled={loading || uploading}>
-                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Saqlash
-                        </Button>
-                    ) : (
+                            {uploading && <div className="text-sm text-muted-foreground flex items-center justify-center py-4"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Rasmlar yuklanmoqda...</div>}
+                        </TabsContent>
+                    </Tabs>
+
+                    <div className="flex justify-between">
                         <Button
                             type="button"
-                            onClick={handleNext}
+                            variant="outline"
+                            onClick={handlePrevious}
+                            disabled={currentTab === "main" || uploading}
+                            className={currentTab === "main" ? "invisible" : ""}
                         >
-                            Keyingisi
+                            Avvalgisi
                         </Button>
-                    )}
-                </div>
-            </form>
-        </Form>
+
+                        {currentTab === "media" ? (
+                            <Button
+                                type="button"
+                                disabled={loading || uploading}
+                                onClick={handlePreSave}
+                            >
+                                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Saqlash
+                            </Button>
+                        ) : (
+                            <Button
+                                type="button"
+                                onClick={handleNext}
+                            >
+                                Keyingisi
+                            </Button>
+                        )}
+                    </div>
+                </form>
+            </Form >
+
+            <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>M'alumotlarni saqlash</DialogTitle>
+                        <DialogDescription>
+                            Barcha kiritilgan ma'lumotlar to'g'riligiga ishonchingiz komilmi?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowSaveDialog(false)}>Bekor qilish</Button>
+                        <Button onClick={() => {
+                            setShowSaveDialog(false);
+                            form.handleSubmit(handleSubmit)();
+                        }}>Tasdiqlash</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </>
     )
 }
