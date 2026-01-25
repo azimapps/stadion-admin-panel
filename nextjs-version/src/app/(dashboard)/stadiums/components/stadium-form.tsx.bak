@@ -14,7 +14,6 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form"
-import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -51,15 +50,12 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
         is_metro_near: initialData?.is_metro_near ?? false,
         phones: initialData?.phone ? initialData.phone.map((p: string) => ({ value: p })) : [{ value: "" }],
         capacity: initialData?.capacity || "7x7",
-        price_per_hour: initialData?.price_per_hour || 200000,
-        surface_type: initialData?.surface_type || "artificial",
-        roof_type: initialData?.roof_type || "open",
+        price_per_hour: initialData?.price_per_hour || 0,
     }
 
     const form = useForm<StadiumFormValues>({
         resolver: zodResolver(stadiumSchema) as any,
         defaultValues,
-        mode: "onChange",
     })
 
     const { fields, append, remove } = useFieldArray({
@@ -170,12 +166,15 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
 
     const [currentTab, setCurrentTab] = useState("main")
 
-    const tabs = ["main", "info", "location", "media"]
+    const tabs = ["main", "uz", "ru", "location", "details", "media"]
+
     // Validation fields for each tab
     const tabFields: Record<string, (keyof StadiumFormValues)[]> = {
-        main: ["is_active", "phones", "capacity", "price_per_hour", "surface_type", "roof_type"], // phones is complex, trigger("phones") works
-        info: ["name_uz", "name_ru", "slug", "description_uz", "description_ru"],
-        location: ["latitude", "longitude", "address_uz", "address_ru", "is_metro_near", "metro_station", "metro_distance"],
+        main: ["slug", "is_active", "phones"], // phones is complex, trigger("phones") works
+        uz: ["name_uz", "description_uz", "address_uz"],
+        ru: ["name_ru", "description_ru", "address_ru"],
+        location: ["latitude", "longitude", "is_metro_near", "metro_station", "metro_distance"],
+        details: ["capacity", "price_per_hour", "surface_type", "roof_type"],
         media: ["main_image", "images"],
     }
 
@@ -202,14 +201,29 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
         <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
                 <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-4">
+                    <TabsList className="grid w-full grid-cols-6">
                         <TabsTrigger value="main">Asosiy</TabsTrigger>
-                        <TabsTrigger value="info">Ma&apos;lumotlar</TabsTrigger>
+                        <TabsTrigger value="uz">O&apos;zbekcha</TabsTrigger>
+                        <TabsTrigger value="ru">Ruscha</TabsTrigger>
                         <TabsTrigger value="location">Manzil</TabsTrigger>
+                        <TabsTrigger value="details">Batafsil</TabsTrigger>
                         <TabsTrigger value="media">Media</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="main" className="space-y-4 pt-4">
+                        <FormField
+                            control={form.control}
+                            name="slug"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Slug (URL uchun)</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="stadion-nomi" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
 
                         <FormField
                             control={form.control}
@@ -233,98 +247,6 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                 </FormItem>
                             )}
                         />
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                                control={form.control}
-                                name="capacity"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Sig&apos;imi</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Sig'imni tanlang" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {CAPACITY_TYPES.map((type) => (
-                                                    <SelectItem key={type.value} value={type.value}>
-                                                        {type.label}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="price_per_hour"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Soatiga narx (UZS)</FormLabel>
-                                        <FormControl>
-                                            <Input type="number" step="1000" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                                control={form.control}
-                                name="surface_type"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Maydon qoplamasi</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Qoplamani tanlang" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {SURFACE_TYPES.map((type) => (
-                                                    <SelectItem key={type.value} value={type.value}>
-                                                        {type.label}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="roof_type"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Tom turi</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Tom turini tanlang" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {ROOF_TYPES.map((type) => (
-                                                    <SelectItem key={type.value} value={type.value}>
-                                                        {type.label}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-
-                        <Separator className="my-2" />
 
                         <div>
                             <FormLabel>Telefon raqamlar</FormLabel>
@@ -387,167 +309,103 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                 <Plus className="mr-2 h-4 w-4" /> Raqam qo&apos;shish
                             </Button>
                         </div>
-
-
                     </TabsContent>
 
-                    <TabsContent value="info" className="space-y-4 pt-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                                control={form.control}
-                                name="name_uz"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Nomi 🇺🇿</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                placeholder="Chilonzor Arena"
-                                                {...field}
-                                                onChange={(e) => {
-                                                    field.onChange(e);
-                                                    const slug = e.target.value
-                                                        .toLowerCase()
-                                                        .replace(/\s+/g, '-')
-                                                        .replace(/[^a-z0-9-]/g, '');
-                                                    form.setValue("slug", slug, { shouldValidate: true });
-                                                }}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="name_ru"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Название 🇷🇺</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="Чилонзор Арена" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-
+                    <TabsContent value="uz" className="space-y-4 pt-4">
                         <FormField
                             control={form.control}
-                            name="slug"
+                            name="name_uz"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Slug (URL) 🔗</FormLabel>
+                                    <FormLabel>Nomi (O&apos;zbekcha)</FormLabel>
                                     <FormControl>
-                                        <Input
-                                            placeholder="stadion-nomi"
-                                            {...field}
-                                            onChange={(e) => {
-                                                // Auto-format: lowercase, replace spaces with dashes, remove invalid chars
-                                                const value = e.target.value
-                                                    .toLowerCase()
-                                                    .replace(/\s+/g, '-')
-                                                    .replace(/[^a-z0-9-]/g, '');
-                                                field.onChange(value);
-                                            }}
-                                        />
+                                        <Input placeholder="Chilonzor Arena" {...field} />
                                     </FormControl>
-                                    <FormDescription>
-                                        Bu sizning stadioningizning internetdagi manzili bo&apos;ladi. Faqat lotin harflari va raqamlar ishating.
-                                    </FormDescription>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
+                        <FormField
+                            control={form.control}
+                            name="description_uz"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Tavsif (O&apos;zbekcha)</FormLabel>
+                                    <FormControl>
+                                        <Textarea className="h-32" placeholder="Stadion haqida..." {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="address_uz"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Manzil (O&apos;zbekcha)</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Toshkent sh., ..." {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </TabsContent>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                                control={form.control}
-                                name="description_uz"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Tavsif 🇺🇿</FormLabel>
-                                        <FormControl>
-                                            <Textarea className="h-32" placeholder="Stadion haqida..." {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="description_ru"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Описание 🇷🇺</FormLabel>
-                                        <FormControl>
-                                            <Textarea className="h-32" placeholder="О стадионе..." {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
+                    <TabsContent value="ru" className="space-y-4 pt-4">
+                        <FormField
+                            control={form.control}
+                            name="name_ru"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Nomi (Ruscha)</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Чилонзор Арена" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="description_ru"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Tavsif (Ruscha)</FormLabel>
+                                    <FormControl>
+                                        <Textarea className="h-32" placeholder="О стадионе..." {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="address_ru"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Manzil (Ruscha)</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="г. Ташкент, ..." {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                     </TabsContent>
 
                     <TabsContent value="location" className="space-y-4 pt-4">
                         <div className="space-y-2">
-                            <FormLabel className="sr-only">Joylashuv (Xarita)</FormLabel>
-
-                            <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 items-start">
-                                {/* Left Side: Map Preview (Square) */}
-                                <div className="w-[200px] h-[200px] shrink-0">
-                                    <LocationPicker
-                                        latitude={form.watch("latitude")}
-                                        longitude={form.watch("longitude")}
-                                        className="h-full w-full aspect-square"
-                                        onLocationSelect={(lat, lng, address) => {
-                                            form.setValue("latitude", lat)
-                                            form.setValue("longitude", lng)
-                                            if (address) {
-                                                const currentUz = form.getValues("address_uz");
-                                                if (!currentUz || currentUz.trim() === "") {
-                                                    form.setValue("address_uz", address);
-                                                }
-                                                const currentRu = form.getValues("address_ru");
-                                                if (!currentRu || currentRu.trim() === "") {
-                                                    form.setValue("address_ru", address);
-                                                }
-                                            }
-                                        }}
-                                    />
-                                </div>
-
-                                {/* Right Side: Address Inputs */}
-                                <div className="flex flex-col gap-4 w-full">
-                                    <FormField
-                                        control={form.control}
-                                        name="address_uz"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Manzil 🇺🇿</FormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="Toshkent sh., ..." {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="address_ru"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Адрес 🇷🇺</FormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="г. Ташкент, ..." {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
-                            </div>
+                            <FormLabel>Joylashuv (Xarita)</FormLabel>
+                            <LocationPicker
+                                latitude={form.watch("latitude")}
+                                longitude={form.watch("longitude")}
+                                onLocationSelect={(lat, lng) => {
+                                    form.setValue("latitude", lat)
+                                    form.setValue("longitude", lng)
+                                }}
+                            />
                             <div className="grid grid-cols-2 gap-4 hidden">
                                 <FormField
                                     control={form.control}
@@ -637,7 +495,97 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                         )}
                     </TabsContent>
 
-
+                    <TabsContent value="details" className="space-y-4 pt-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name="capacity"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Sig&apos;imi</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Sig'imni tanlang" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {CAPACITY_TYPES.map((type) => (
+                                                    <SelectItem key={type.value} value={type.value}>
+                                                        {type.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="price_per_hour"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Soatiga narx (UZS)</FormLabel>
+                                        <FormControl>
+                                            <Input type="number" step="1000" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name="surface_type"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Maydon qoplamasi</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Qoplamani tanlang" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {SURFACE_TYPES.map((type) => (
+                                                    <SelectItem key={type.value} value={type.value}>
+                                                        {type.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="roof_type"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Tom turi</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Tom turini tanlang" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {ROOF_TYPES.map((type) => (
+                                                    <SelectItem key={type.value} value={type.value}>
+                                                        {type.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                    </TabsContent>
 
                     <TabsContent value="media" className="space-y-4 pt-4">
                         <FormItem>

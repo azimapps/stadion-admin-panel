@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const stadiumSchema = z.object({
-    slug: z.string().default("").refine(val => val.length > 0, "Slug kiritish shart"),
+    slug: z.string().default("").transform(val => val.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')).refine(val => val.length > 0, "Slug kiritish shart"),
     name_uz: z.string().default("").refine(val => val.length > 0, "O'zbekcha nomini kiritish shart"),
     name_ru: z.string().default("").refine(val => val.length > 0, "Ruscha nomini kiritish shart"),
     description_uz: z.string().optional(),

@@ -33,23 +33,23 @@ export const METRO_STATIONS = [
     { label: "Chilonzor", value: "Chilonzor" },
     { label: "Olmazor", value: "Olmazor" },
     { label: "Choshtepa", value: "Choshtepa" },
-    { label: "Oʻzgarish", value: "Oʻzgarish" },
-    { label: "Sirgʻali", value: "Sirgʻali" },
+    { label: "O'zgarish", value: "O'zgarish" },
+    { label: "Sirg'ali", value: "Sirg'ali" },
     { label: "Yangihayot", value: "Yangihayot" },
     { label: "Chinor", value: "Chinor" },
 
-    // Oʻzbekiston Line (Blue Line)
+    // O'zbekiston Line (Blue Line)
     { label: "Beruniy", value: "Beruniy" },
     { label: "Tinchlik", value: "Tinchlik" },
     { label: "Chorsu", value: "Chorsu" },
-    { label: "Gʻafur Gʻulom", value: "Gʻafur Gʻulom" },
+    { label: "G'afur G'ulom", value: "G'afur G'ulom" },
     { label: "Alisher Navoiy", value: "Alisher Navoiy" },
-    { label: "Oʻzbekiston", value: "Oʻzbekiston" },
+    { label: "O'zbekiston", value: "O'zbekiston" },
     { label: "Kosmonavtlar", value: "Kosmonavtlar" },
     { label: "Oybek", value: "Oybek" },
     { label: "Toshkent", value: "Toshkent" },
     { label: "Mashinasozlar", value: "Mashinasozlar" },
-    { label: "Doʻstlik", value: "Doʻstlik" },
+    { label: "Do'stlik", value: "Do'stlik" },
 
     // Yunusobod Line (Green Line)
     { label: "Turkiston", value: "Turkiston" },
@@ -59,7 +59,7 @@ export const METRO_STATIONS = [
     { label: "Minor", value: "Minor" },
     { label: "Abdulla Qodirii", value: "Abdulla Qodirii" },
     { label: "Yunus Rajabiy", value: "Yunus Rajabiy" },
-    { label: "Ming Oʻrik", value: "Ming Oʻrik" },
+    { label: "Ming O'rik", value: "Ming O'rik" },
 
     // Circle Line (O'ttiz Yillik Mustaqillik)
     { label: "Texnopark", value: "Texnopark" },
@@ -68,7 +68,7 @@ export const METRO_STATIONS = [
     { label: "Olmos", value: "Olmos" },
     { label: "Rohat", value: "Rohat" },
     { label: "Yangiobod", value: "Yangiobod" },
-    { label: "Qoʻyliq", value: "Qoʻyliq" },
+    { label: "Qo'yliq", value: "Qo'yliq" },
     { label: "Matonat", value: "Matonat" },
     { label: "Qiyot", value: "Qiyot" },
     { label: "Tolariq", value: "Tolariq" },
@@ -76,4 +76,15 @@ export const METRO_STATIONS = [
     { label: "Quruvchilar", value: "Quruvchilar" },
     { label: "Turon", value: "Turon" },
     { label: "Qipchoq", value: "Qipchoq" },
+] as const;
+
+export const LANDMARK_TYPES = [
+    { label: "Metro bekati", value: "subway", amenity: "station", overpass: '["railway"="station"]["station"="subway"]' },
+    { label: "Kafe", value: "cafe", amenity: "cafe", overpass: '["amenity"="cafe"]' },
+    { label: "Restoran", value: "restaurant", amenity: "restaurant", overpass: '["amenity"="restaurant"]' },
+    { label: "Bozor", value: "marketplace", amenity: "marketplace", overpass: '["amenity"="marketplace"]' },
+    { label: "Masjid", value: "place_of_worship", amenity: "place_of_worship", overpass: '["amenity"="place_of_worship"]["religion"="muslim"]' },
+    { label: "Maktab", value: "school", amenity: "school", overpass: '["amenity"="school"]' },
+    { label: "Kasalxona", value: "hospital", amenity: "hospital", overpass: '["amenity"="hospital"]' },
+    { label: "Bog' / Park", value: "park", amenity: "park", overpass: '["leisure"="park"]' },
 ] as const;
