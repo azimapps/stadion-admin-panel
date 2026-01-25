@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   },
   turbopack: {},
 
+
   // Image optimization
   images: {
     remotePatterns: [
