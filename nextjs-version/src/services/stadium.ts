@@ -38,6 +38,19 @@ export const stadiumsService = {
         return response.json();
     },
 
+    async getById(id: string | number): Promise<Stadium> {
+        // GET /:id is public, but we send token if available
+        const token = Cookies.get('token');
+        const headers: HeadersInit = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`${API_URL}/${id}`, { headers });
+        if (!response.ok) throw new Error('Failed to fetch stadium details');
+        return response.json();
+    },
+
     async create(data: Partial<Stadium>): Promise<Stadium> {
         const token = Cookies.get('token');
         const response = await fetch(`${API_URL}/`, {
