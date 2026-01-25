@@ -18,8 +18,8 @@ export const stadiumSchema = z.object({
     roof_type: z.string().optional(),
     price_per_hour: z.coerce.number().min(100000, "Narx kamida 100,000 so'm bo'lishi shart"),
     phones: z.array(z.object({ value: z.string().min(1, "Raqam kiritish shart") })).min(1, "Kamida bitta telefon raqam kiritish shart").optional(),
-    main_image: z.string().optional(),
-    images: z.array(z.string()).optional(),
+    main_image: z.string().default("").refine(val => val.length > 0, "Asosiy rasmni yuklash shart"),
+    images: z.array(z.string()).default([]).refine(val => val.length > 0, "Kamida bitta qo'shimcha rasm yuklash shart"),
     is_active: z.boolean().default(true).optional(),
 }).superRefine((data, ctx) => {
     if (data.is_metro_near) {

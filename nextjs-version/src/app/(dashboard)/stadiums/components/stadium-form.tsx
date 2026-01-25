@@ -26,6 +26,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { cn } from "@/lib/utils"
 import {
     Dialog,
     DialogContent,
@@ -38,6 +39,7 @@ import { CAPACITY_TYPES, METRO_STATIONS, ROOF_TYPES, SURFACE_TYPES } from "./sta
 import { uploadService } from "@/services/upload"
 import { Loader2, Plus, Trash, Upload } from "lucide-react"
 import dynamic from "next/dynamic"
+import { toast } from "sonner"
 
 const LocationPicker = dynamic(() => import('./location-picker'), {
     ssr: false,
@@ -53,6 +55,10 @@ interface StadiumFormProps {
 export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps) {
     const [uploading, setUploading] = useState(false)
     const [showSaveDialog, setShowSaveDialog] = useState(false)
+    const [showErrorDialog, setShowErrorDialog] = useState(false)
+    const [errorMessage, setErrorMessage] = useState("")
+    const [showPreviewDialog, setShowPreviewDialog] = useState(false)
+    const [previewImage, setPreviewImage] = useState<string | null>(null)
 
     const defaultValues: Partial<StadiumFormValues> = {
         ...initialData,
@@ -159,13 +165,24 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, fieldName: "main_image" | "images") => {
         if (!e.target.files?.length) return
 
-        const files = Array.from(e.target.files)
+        const validFiles = Array.from(e.target.files).filter(file => {
+            if (file.size > 500 * 1024) {
+                setErrorMessage(`"${file.name}" fayl hajmi 500KB dan oshmasligi kerak!`);
+                setShowErrorDialog(true);
+                return false;
+            }
+            return true;
+        });
+
+        if (validFiles.length === 0) return
+
+        const files = validFiles;
 
         if (fieldName === "main_image") {
             const file = files[0];
             const previewUrl = URL.createObjectURL(file);
             fileMap.current.set(previewUrl, file);
-            form.setValue("main_image", previewUrl);
+            form.setValue("main_image", previewUrl, { shouldValidate: true });
         } else {
             const newImages = files.map(file => {
                 const previewUrl = URL.createObjectURL(file);
@@ -173,7 +190,7 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                 return previewUrl;
             });
             const currentImages = form.getValues("images") || [];
-            form.setValue("images", [...currentImages, ...newImages]);
+            form.setValue("images", [...currentImages, ...newImages], { shouldValidate: true });
         }
     }
 
@@ -683,8 +700,21 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
                                 {/* Card 1: Main Image (Asosiy) */}
                                 <FormItem className="col-span-1">
-                                    <div className="relative group aspect-square rounded-xl border-2 border-dashed border-emerald-500/50 bg-emerald-50/10 hover:bg-emerald-50/20 transition-all flex flex-col items-center justify-center cursor-pointer overflow-hidden shadow-sm hover:shadow-md"
-                                        onClick={() => document.getElementById("main-image-input")?.click()}>
+                                    <div className={cn(
+                                        "relative group aspect-square rounded-xl border-2 border-dashed transition-all flex flex-col items-center justify-center cursor-pointer overflow-hidden shadow-sm hover:shadow-md",
+                                        form.formState.errors.main_image
+                                            ? "border-destructive bg-destructive/5"
+                                            : "border-emerald-500/50 bg-emerald-50/10 hover:bg-emerald-50/20"
+                                    )}
+                                        onClick={() => {
+                                            const img = form.getValues("main_image");
+                                            if (img) {
+                                                setPreviewImage(img);
+                                                setShowPreviewDialog(true);
+                                            } else {
+                                                document.getElementById("main-image-input")?.click();
+                                            }
+                                        }}>
 
                                         <Input
                                             id="main-image-input"
@@ -693,6 +723,7 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                             className="hidden"
                                             disabled={uploading}
                                             onChange={(e) => handleImageUpload(e, "main_image")}
+                                            onClick={(e) => e.stopPropagation()}
                                         />
 
                                         {form.watch("main_image") ? (
@@ -700,7 +731,19 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                                 <img src={form.watch("main_image")} alt="Main" className="h-full w-full object-cover" />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <span className="text-white text-xs font-semibold bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">O'zgartirish</span>
+                                                    <Button
+                                                        type="button"
+                                                        variant="secondary"
+                                                        size="sm"
+                                                        className="h-8 text-xs gap-2"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            document.getElementById("main-image-input")?.click();
+                                                        }}
+                                                    >
+                                                        <Upload className="h-3 w-3" />
+                                                        Almashtirish
+                                                    </Button>
                                                 </div>
                                             </>
                                         ) : (
@@ -712,7 +755,7 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                                 <span className="text-[10px] text-muted-foreground">Yuklash</span>
                                             </div>
                                         )}
-                                        <div className="absolute top-2 right-2 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm z-10">
+                                        <div className="absolute top-2 right-2 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm z-10 pointer-events-none">
                                             ASOSIY
                                         </div>
                                     </div>
@@ -726,7 +769,19 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                     const imgUrl = images[i];
 
                                     return (
-                                        <div key={i} className="relative aspect-square rounded-xl border border-dashed border-border bg-muted/20 hover:bg-muted/30 transition-all flex flex-col items-center justify-center overflow-hidden group">
+                                        <div key={i} className={cn(
+                                            "relative aspect-square rounded-xl border border-dashed transition-all flex flex-col items-center justify-center overflow-hidden group cursor-pointer",
+                                            !hasImage && form.formState.errors.images && i === 0
+                                                ? "border-destructive bg-destructive/5"
+                                                : "border-border bg-muted/20 hover:bg-muted/30"
+                                        )}
+                                            onClick={() => {
+                                                if (hasImage) {
+                                                    setPreviewImage(imgUrl);
+                                                    setShowPreviewDialog(true);
+                                                }
+                                            }}
+                                        >
                                             {hasImage ? (
                                                 <>
                                                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -741,7 +796,7 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                                                 e.stopPropagation();
                                                                 const newImages = [...images];
                                                                 newImages.splice(i, 1);
-                                                                form.setValue("images", newImages);
+                                                                form.setValue("images", newImages, { shouldValidate: true });
                                                             }}
                                                         >
                                                             <Trash className="h-4 w-4" />
@@ -781,6 +836,11 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                     }}
                                 />
                             </div>
+                            {form.formState.errors.images && (
+                                <p className="text-sm font-medium text-destructive mt-2">
+                                    {form.formState.errors.images.message}
+                                </p>
+                            )}
 
                             {uploading && <div className="text-sm text-muted-foreground flex items-center justify-center py-4"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Rasmlar yuklanmoqda...</div>}
                         </TabsContent>
@@ -833,6 +893,43 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                             form.handleSubmit(handleSubmit)();
                         }}>Tasdiqlash</Button>
                     </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="text-destructive">Xatolik</DialogTitle>
+                        <DialogDescription>
+                            {errorMessage}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button onClick={() => setShowErrorDialog(false)}>Tushunarli</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
+                <DialogContent className="!max-w-none w-auto h-auto max-w-[100vw] max-h-[100vh] p-0 bg-transparent border-none shadow-none [&>button]:hidden flex items-center justify-center overflow-hidden">
+                    <div className="relative flex items-center justify-center w-full h-full">
+                        <Button
+                            variant="secondary"
+                            size="icon"
+                            className="absolute -top-2 -right-2 md:-top-3 md:-right-3 rounded-full h-9 w-9 z-50 shadow-md border hover:bg-destructive hover:text-white transition-colors"
+                            onClick={() => setShowPreviewDialog(false)}
+                        >
+                            <Plus className="h-6 w-6 rotate-45" />
+                        </Button>
+                        {previewImage && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                                src={previewImage}
+                                alt="Preview"
+                                className="max-w-[98vw] max-h-[98vh] w-auto h-auto rounded-md object-contain shadow-2xl"
+                            />
+                        )}
+                    </div>
                 </DialogContent>
             </Dialog>
         </>
