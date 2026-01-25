@@ -505,14 +505,8 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                             form.setValue("latitude", lat)
                                             form.setValue("longitude", lng)
                                             if (address) {
-                                                const currentUz = form.getValues("address_uz");
-                                                if (!currentUz || currentUz.trim() === "") {
-                                                    form.setValue("address_uz", address);
-                                                }
-                                                const currentRu = form.getValues("address_ru");
-                                                if (!currentRu || currentRu.trim() === "") {
-                                                    form.setValue("address_ru", address);
-                                                }
+                                                form.setValue("address_uz", address);
+                                                form.setValue("address_ru", address);
                                             }
                                         }}
                                     />
