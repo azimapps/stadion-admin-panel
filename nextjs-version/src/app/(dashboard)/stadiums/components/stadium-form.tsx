@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { StadiumFormValues, stadiumSchema } from "./stadium-schema"
@@ -18,8 +18,22 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import { CAPACITY_TYPES, METRO_STATIONS, ROOF_TYPES, SURFACE_TYPES } from "./stadium-constants"
 import { uploadService } from "@/services/upload"
 import { Loader2, Plus, Trash, Upload } from "lucide-react"
+import dynamic from "next/dynamic"
+
+const LocationPicker = dynamic(() => import('./location-picker'), {
+    ssr: false,
+    loading: () => <div className="h-[400px] w-full bg-muted animate-pulse rounded-md flex items-center justify-center text-muted-foreground">Xarita yuklanmoqda...</div>
+})
 
 interface StadiumFormProps {
     initialData?: any; // strict typing can be added later
@@ -34,7 +48,7 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
         ...initialData,
         is_active: initialData?.is_active ?? true,
         is_metro_near: initialData?.is_metro_near ?? false,
-        phones: initialData?.phone ? initialData.phone.map((p: string) => ({ value: p })) : [{ value: "+998" }],
+        phones: initialData?.phone ? initialData.phone.map((p: string) => ({ value: p })) : [{ value: "" }],
         capacity: initialData?.capacity || "7x7",
         price_per_hour: initialData?.price_per_hour || 0,
     }
@@ -49,53 +63,151 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
         name: "phones",
     })
 
-    const handleSubmit = async (values: StadiumFormValues) => {
-        // Transform phones array of objects back to string array for API
-        const submissionData = {
-            ...values,
-            phone: values.phones?.map(p => p.value) || [],
-        };
-        // Remove internal phones field
-        delete (submissionData as any).phones;
+    const fileMap = useRef<Map<string, File>>(new Map())
 
-        await onSubmit(submissionData as any);
+    const handleSubmit = async (values: StadiumFormValues) => {
+        setUploading(true);
+        try {
+            // Identify pending files
+            const filesToUpload: File[] = [];
+            const blobToUrlMap = new Map<string, string>();
+
+            const mainImage = values.main_image;
+            if (mainImage && mainImage.startsWith('blob:')) {
+                const file = fileMap.current.get(mainImage);
+                if (file) filesToUpload.push(file);
+            }
+
+            const galleryImages = values.images || [];
+            galleryImages.forEach(img => {
+                if (img.startsWith('blob:')) {
+                    const file = fileMap.current.get(img);
+                    if (file) filesToUpload.push(file);
+                }
+            });
+
+            // Upload pending files
+            if (filesToUpload.length > 0) {
+                const result = await uploadService.uploadStadiumImages(filesToUpload);
+
+                // Map uploaded files back to their blobs via filename/order or assume sequential handling?
+                // `uploadService` preserves order.
+                // We need to match which file corresponds to which URL.
+                // Let's iterate filesToUpload and result.uploaded together.
+
+                if (result.uploaded.length !== filesToUpload.length) {
+                    throw new Error("Mismatch in uploaded file count");
+                }
+
+                filesToUpload.forEach((file, index) => {
+                    // We need to find the blob URL that corresponds to this file
+                    // Inverse lookup in fileMap is slow, but we can iterate the map.
+                    for (const [blob, f] of fileMap.current.entries()) {
+                        if (f === file) {
+                            blobToUrlMap.set(blob, result.uploaded[index].url);
+                            break;
+                        }
+                    }
+                });
+            }
+
+            // Replace blobs with real URLs
+            let finalMainImage = values.main_image;
+            if (finalMainImage && finalMainImage.startsWith('blob:')) {
+                finalMainImage = blobToUrlMap.get(finalMainImage) || finalMainImage;
+            }
+
+            const finalImages = (values.images || []).map(img => {
+                if (img.startsWith('blob:')) {
+                    return blobToUrlMap.get(img) || img;
+                }
+                return img;
+            });
+
+            // Transform phones array of objects back to string array for API
+            const submissionData = {
+                ...values,
+                main_image: finalMainImage,
+                images: finalImages,
+                phone: values.phones?.map(p => p.value) || [],
+            };
+            // Remove internal phones field
+            delete (submissionData as any).phones;
+
+            await onSubmit(submissionData as any);
+        } catch (error) {
+            console.error("Submission error:", error);
+            alert("Ma'lumotlarni saqlashda xatolik yuz berdi");
+        } finally {
+            setUploading(false);
+        }
     }
 
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: "main_image" | "images") => {
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, fieldName: "main_image" | "images") => {
         if (!e.target.files?.length) return
-        setUploading(true)
-        try {
-            const files = Array.from(e.target.files)
-            const result = await uploadService.uploadStadiumImages(files)
 
-            if (result.uploaded?.length) {
-                if (fieldName === "main_image") {
-                    form.setValue("main_image", result.uploaded[0].url)
-                } else {
-                    const currentImages = form.getValues("images") || []
-                    const newImages = result.uploaded.map(u => u.url)
-                    form.setValue("images", [...currentImages, ...newImages])
-                }
+        const files = Array.from(e.target.files)
+
+        if (fieldName === "main_image") {
+            const file = files[0];
+            const previewUrl = URL.createObjectURL(file);
+            fileMap.current.set(previewUrl, file);
+            form.setValue("main_image", previewUrl);
+        } else {
+            const newImages = files.map(file => {
+                const previewUrl = URL.createObjectURL(file);
+                fileMap.current.set(previewUrl, file);
+                return previewUrl;
+            });
+            const currentImages = form.getValues("images") || [];
+            form.setValue("images", [...currentImages, ...newImages]);
+        }
+    }
+
+    const [currentTab, setCurrentTab] = useState("main")
+
+    const tabs = ["main", "uz", "ru", "location", "details", "media"]
+
+    // Validation fields for each tab
+    const tabFields: Record<string, (keyof StadiumFormValues)[]> = {
+        main: ["slug", "is_active", "phones"], // phones is complex, trigger("phones") works
+        uz: ["name_uz", "description_uz", "address_uz"],
+        ru: ["name_ru", "description_ru", "address_ru"],
+        location: ["latitude", "longitude", "is_metro_near", "metro_station", "metro_distance"],
+        details: ["capacity", "price_per_hour", "surface_type", "roof_type"],
+        media: ["main_image", "images"],
+    }
+
+    const handleNext = async () => {
+        const fields = tabFields[currentTab]
+        const isValid = await form.trigger(fields as any)
+
+        if (isValid) {
+            const currentIndex = tabs.indexOf(currentTab)
+            if (currentIndex < tabs.length - 1) {
+                setCurrentTab(tabs[currentIndex + 1])
             }
-        } catch (error) {
-            console.error("Upload error:", error)
-            alert("Rasmni yuklashda xatolik yuz berdi")
-        } finally {
-            setUploading(false)
+        }
+    }
+
+    const handlePrevious = () => {
+        const currentIndex = tabs.indexOf(currentTab)
+        if (currentIndex > 0) {
+            setCurrentTab(tabs[currentIndex - 1])
         }
     }
 
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
-                <Tabs defaultValue="main" className="w-full">
-                    <TabsList>
+                <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
+                    <TabsList className="grid w-full grid-cols-6">
                         <TabsTrigger value="main">Asosiy</TabsTrigger>
                         <TabsTrigger value="uz">O&apos;zbekcha</TabsTrigger>
                         <TabsTrigger value="ru">Ruscha</TabsTrigger>
-                        <TabsTrigger value="location">Manzil & Metro</TabsTrigger>
-                        <TabsTrigger value="details">Batafsil & Narx</TabsTrigger>
-                        <TabsTrigger value="media">Media (Rasmlar)</TabsTrigger>
+                        <TabsTrigger value="location">Manzil</TabsTrigger>
+                        <TabsTrigger value="details">Batafsil</TabsTrigger>
+                        <TabsTrigger value="media">Media</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="main" className="space-y-4 pt-4">
@@ -147,7 +259,29 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                             render={({ field }) => (
                                                 <FormItem className="flex-1">
                                                     <FormControl>
-                                                        <Input {...field} />
+                                                        <div className="flex items-center">
+                                                            <span className="mr-2 text-sm text-muted-foreground">+998</span>
+                                                            <Input
+                                                                {...field}
+                                                                placeholder="(90) 123-45-67"
+                                                                value={(field.value || "").replace(/^\+998\s?/, '')}
+                                                                onChange={(e) => {
+                                                                    let value = e.target.value.replace(/\D/g, '').substring(0, 9);
+                                                                    if (value.length > 0) {
+                                                                        if (value.length <= 2) {
+                                                                            value = `(${value}`;
+                                                                        } else if (value.length <= 5) {
+                                                                            value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+                                                                        } else if (value.length <= 7) {
+                                                                            value = `(${value.slice(0, 2)}) ${value.slice(2, 5)}-${value.slice(5)}`;
+                                                                        } else {
+                                                                            value = `(${value.slice(0, 2)}) ${value.slice(2, 5)}-${value.slice(5, 7)}-${value.slice(7, 9)}`;
+                                                                        }
+                                                                    }
+                                                                    field.onChange(`+998 ${value}`);
+                                                                }}
+                                                            />
+                                                        </div>
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -170,7 +304,7 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                 variant="outline"
                                 size="sm"
                                 className="mt-2"
-                                onClick={() => append({ value: "+998" })}
+                                onClick={() => append({ value: "" })}
                             >
                                 <Plus className="mr-2 h-4 w-4" /> Raqam qo&apos;shish
                             </Button>
@@ -262,33 +396,40 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                     </TabsContent>
 
                     <TabsContent value="location" className="space-y-4 pt-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                                control={form.control}
-                                name="latitude"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Kenglik (Latitude)</FormLabel>
-                                        <FormControl>
-                                            <Input type="number" step="any" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
+                        <div className="space-y-2">
+                            <FormLabel>Joylashuv (Xarita)</FormLabel>
+                            <LocationPicker
+                                latitude={form.watch("latitude")}
+                                longitude={form.watch("longitude")}
+                                onLocationSelect={(lat, lng) => {
+                                    form.setValue("latitude", lat)
+                                    form.setValue("longitude", lng)
+                                }}
                             />
-                            <FormField
-                                control={form.control}
-                                name="longitude"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Uzunlik (Longitude)</FormLabel>
-                                        <FormControl>
-                                            <Input type="number" step="any" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                            <div className="grid grid-cols-2 gap-4 hidden">
+                                <FormField
+                                    control={form.control}
+                                    name="latitude"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormControl>
+                                                <Input type="number" step="any" {...field} />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="longitude"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormControl>
+                                                <Input type="number" step="any" {...field} />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
                         </div>
 
                         <FormField
@@ -319,9 +460,20 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Metro bekati</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="Chilonzor" {...field} />
-                                            </FormControl>
+                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Bekatni tanlang" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent className="max-h-[200px]">
+                                                    {METRO_STATIONS.map((station) => (
+                                                        <SelectItem key={station.value} value={station.value}>
+                                                            {station.label}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -351,9 +503,20 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Sig&apos;imi</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="7x7" {...field} />
-                                        </FormControl>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Sig'imni tanlang" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {CAPACITY_TYPES.map((type) => (
+                                                    <SelectItem key={type.value} value={type.value}>
+                                                        {type.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                         <FormMessage />
                                     </FormItem>
                                 )}
@@ -379,9 +542,20 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Maydon qoplamasi</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="artificial" {...field} />
-                                        </FormControl>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Qoplamani tanlang" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {SURFACE_TYPES.map((type) => (
+                                                    <SelectItem key={type.value} value={type.value}>
+                                                        {type.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                         <FormMessage />
                                     </FormItem>
                                 )}
@@ -392,9 +566,20 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Tom turi</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="covered" {...field} />
-                                        </FormControl>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Tom turini tanlang" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {ROOF_TYPES.map((type) => (
+                                                    <SelectItem key={type.value} value={type.value}>
+                                                        {type.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                         <FormMessage />
                                     </FormItem>
                                 )}
@@ -441,10 +626,31 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                     </TabsContent>
                 </Tabs>
 
-                <Button type="submit" disabled={loading || uploading}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Saqlash
-                </Button>
+                <div className="flex justify-between">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handlePrevious}
+                        disabled={currentTab === "main" || uploading}
+                        className={currentTab === "main" ? "invisible" : ""}
+                    >
+                        Avvalgisi
+                    </Button>
+
+                    {currentTab === "media" ? (
+                        <Button type="submit" disabled={loading || uploading}>
+                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Saqlash
+                        </Button>
+                    ) : (
+                        <Button
+                            type="button"
+                            onClick={handleNext}
+                        >
+                            Keyingisi
+                        </Button>
+                    )}
+                </div>
             </form>
         </Form>
     )

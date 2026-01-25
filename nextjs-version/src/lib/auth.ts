@@ -22,9 +22,9 @@ export const authService = {
     };
 
     // 1. Intercept Admin Login immediately to avoid ANY chance of API error
-    if (cleanEmail === "admin@gmail.com" && cleanPass === "admin") {
-      return createMockSession();
-    }
+    // if (cleanEmail === "admin@gmail.com" && cleanPass === "admin") {
+    //   return createMockSession();
+    // }
 
     try {
       const response = await fetch(`${API_URL}/login`, {

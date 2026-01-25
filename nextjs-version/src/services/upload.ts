@@ -18,6 +18,9 @@ export interface UploadResponse {
 export const uploadService = {
     async uploadStadiumImages(files: File[]): Promise<UploadResponse> {
         const token = Cookies.get('token');
+        if (!token) {
+            throw new Error("Authentication token not found. Please log in again.");
+        }
         const formData = new FormData();
 
         files.forEach((file) => {
@@ -31,6 +34,12 @@ export const uploadService = {
             },
             body: formData,
         });
+
+        if (response.status === 401) {
+            Cookies.remove('token');
+            window.location.href = '/sign-in';
+            throw new Error('Unauthorized');
+        }
 
         if (!response.ok) {
             const error = await response.json().catch(() => ({ message: 'Upload failed' }));
