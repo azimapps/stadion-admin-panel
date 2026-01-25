@@ -64,6 +64,8 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
         ...initialData,
         is_active: initialData?.is_active ?? true,
         is_metro_near: initialData?.is_metro_near ?? false,
+        metro_station: initialData?.metro_station || "",
+        metro_distance: initialData?.metro_distance || 0,
         phones: initialData?.phone ? initialData.phone.map((p: string) => ({ value: p })) : [{ value: "" }],
         capacity: initialData?.capacity || "7x7",
         price_per_hour: initialData?.price_per_hour || 200000,
@@ -144,11 +146,17 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
             });
 
             // Transform phones array of objects back to string array for API
+            // Sanitize optional fields: convert empty strings to null/undefined
             const submissionData = {
                 ...values,
                 main_image: finalMainImage,
                 images: finalImages,
                 phone: values.phones?.map(p => p.value) || [],
+                // backend invalid input fix
+                metro_station: values.is_metro_near && values.metro_station ? values.metro_station : null,
+                metro_distance: values.is_metro_near && values.metro_distance ? values.metro_distance : 0,
+                surface_type: values.surface_type || null,
+                roof_type: values.roof_type || null,
             };
             // Remove internal phones field
             delete (submissionData as any).phones;

@@ -75,7 +75,17 @@ export const stadiumsService = {
             },
             body: JSON.stringify(data),
         });
-        if (!response.ok) throw new Error('Failed to update stadium');
+        if (!response.ok) {
+            const errorText = await response.text();
+            let errorMessage = 'Failed to update stadium';
+            try {
+                const errorJson = JSON.parse(errorText);
+                errorMessage = errorJson.detail || errorJson.message || errorMessage;
+            } catch {
+                errorMessage = errorText || errorMessage;
+            }
+            throw new Error(errorMessage);
+        }
         return response.json();
     },
 
