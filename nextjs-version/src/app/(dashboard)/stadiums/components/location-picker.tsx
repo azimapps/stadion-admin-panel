@@ -10,7 +10,7 @@ const YANDEX_API_KEY = "a67d2f0d-f7f6-4dd7-8611-3aab09bce787";
 interface LocationPickerProps {
     latitude?: number;
     longitude?: number;
-    onLocationSelect: (lat: number, lng: number, address?: string) => void;
+    onLocationSelect: (lat: number, lng: number, addressUz?: string, addressRu?: string) => void;
     className?: string;
 }
 
@@ -54,9 +54,9 @@ export default function LocationPicker({ latitude, longitude, onLocationSelect, 
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
             if (event.data?.type === 'LOCATION_SELECTED') {
-                const { lat, lng, address } = event.data;
-                onLocationSelect(lat, lng, address);
-                if (address) setCurrentAddress(address);
+                const { lat, lng, addressUz, addressRu } = event.data;
+                onLocationSelect(lat, lng, addressUz, addressRu);
+                if (addressUz) setCurrentAddress(addressUz);
             }
         }
 

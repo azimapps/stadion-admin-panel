@@ -501,12 +501,15 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                         latitude={form.watch("latitude")}
                                         longitude={form.watch("longitude")}
                                         className="h-full w-full aspect-square"
-                                        onLocationSelect={(lat, lng, address) => {
+                                        onLocationSelect={(lat, lng, addressUz, addressRu) => {
                                             form.setValue("latitude", lat)
                                             form.setValue("longitude", lng)
-                                            if (address) {
-                                                form.setValue("address_uz", address);
-                                                form.setValue("address_ru", address);
+                                            if (addressUz) form.setValue("address_uz", addressUz);
+                                            // Fallback to Uzbek address if Russian fetch failed or is same
+                                            if (addressRu) {
+                                                form.setValue("address_ru", addressRu);
+                                            } else if (addressUz) {
+                                                form.setValue("address_ru", addressUz);
                                             }
                                         }}
                                     />
@@ -633,42 +636,110 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
 
 
 
-                    <TabsContent value="media" className="space-y-4 pt-4">
-                        <FormItem>
-                            <FormLabel>Asosiy rasm (Main Image)</FormLabel>
-                            <FormControl>
-                                <Input
-                                    type="file"
-                                    accept="image/*"
-                                    disabled={uploading}
-                                    onChange={(e) => handleImageUpload(e, "main_image")}
-                                />
-                            </FormControl>
-                            {form.watch("main_image") && (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={form.watch("main_image")} alt="Main" className="h-40 w-auto rounded-md object-cover mt-2" />
-                            )}
-                        </FormItem>
+                    <TabsContent value="media" className="space-y-6 pt-4">
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+                            {/* Card 1: Main Image (Asosiy) */}
+                            <FormItem className="col-span-1">
+                                <div className="relative group aspect-square rounded-xl border-2 border-dashed border-emerald-500/50 bg-emerald-50/10 hover:bg-emerald-50/20 transition-all flex flex-col items-center justify-center cursor-pointer overflow-hidden shadow-sm hover:shadow-md"
+                                    onClick={() => document.getElementById("main-image-input")?.click()}>
 
-                        <FormItem>
-                            <FormLabel>Galereya rasmlari</FormLabel>
-                            <FormControl>
-                                <Input
-                                    type="file"
-                                    accept="image/*"
-                                    multiple
-                                    disabled={uploading}
-                                    onChange={(e) => handleImageUpload(e, "images")}
-                                />
-                            </FormControl>
-                            <div className="flex gap-2 mt-2 flex-wrap">
-                                {form.watch("images")?.map((img, i) => (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img key={i} src={img} alt={`Gallery ${i}`} className="h-24 w-24 rounded-md object-cover" />
-                                ))}
-                            </div>
-                        </FormItem>
-                        {uploading && <div className="text-sm text-muted-foreground flex items-center"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Yuklanmoqda...</div>}
+                                    <Input
+                                        id="main-image-input"
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        disabled={uploading}
+                                        onChange={(e) => handleImageUpload(e, "main_image")}
+                                    />
+
+                                    {form.watch("main_image") ? (
+                                        <>
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={form.watch("main_image")} alt="Main" className="h-full w-full object-cover" />
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <span className="text-white text-xs font-semibold bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">O'zgartirish</span>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="flex flex-col items-center gap-2 p-4 text-center">
+                                            <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+                                                <Upload className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                                            </div>
+                                            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Rasm 1 (Asosiy)</span>
+                                            <span className="text-[10px] text-muted-foreground">Yuklash</span>
+                                        </div>
+                                    )}
+                                    <div className="absolute top-2 right-2 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm z-10">
+                                        ASOSIY
+                                    </div>
+                                </div>
+                                <FormMessage />
+                            </FormItem>
+
+                            {/* Cards 2-6: Gallery Slots */}
+                            {Array.from({ length: 5 }).map((_, i) => {
+                                const images = form.watch("images") || [];
+                                const hasImage = i < images.length;
+                                const imgUrl = images[i];
+
+                                return (
+                                    <div key={i} className="relative aspect-square rounded-xl border border-dashed border-border bg-muted/20 hover:bg-muted/30 transition-all flex flex-col items-center justify-center overflow-hidden group">
+                                        {hasImage ? (
+                                            <>
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img src={imgUrl} alt={`Gallery ${i}`} className="h-full w-full object-cover" />
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                    <Button
+                                                        type="button"
+                                                        variant="destructive"
+                                                        size="icon"
+                                                        className="h-8 w-8 rounded-full shadow-sm"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            const newImages = [...images];
+                                                            newImages.splice(i, 1);
+                                                            form.setValue("images", newImages);
+                                                        }}
+                                                    >
+                                                        <Trash className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div
+                                                className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-4"
+                                                onClick={() => {
+                                                    // Trigger hidden input for gallery append
+                                                    document.getElementById("gallery-image-input")?.click();
+                                                }}
+                                            >
+                                                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center mb-2 group-hover:bg-background transition-colors shadow-sm">
+                                                    <Plus className="h-4 w-4 text-muted-foreground" />
+                                                </div>
+                                                <span className="text-xs font-medium text-muted-foreground">Rasm {i + 2}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                )
+                            })}
+
+                            {/* Hidden Input for Gallery Uploads */}
+                            <Input
+                                id="gallery-image-input"
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                className="hidden"
+                                disabled={uploading}
+                                onChange={(e) => {
+                                    handleImageUpload(e, "images");
+                                    // Reset value to allow selecting same file again if needed
+                                    e.target.value = "";
+                                }}
+                            />
+                        </div>
+
+                        {uploading && <div className="text-sm text-muted-foreground flex items-center justify-center py-4"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Rasmlar yuklanmoqda...</div>}
                     </TabsContent>
                 </Tabs>
 

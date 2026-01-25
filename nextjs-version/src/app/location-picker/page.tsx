@@ -37,7 +37,10 @@ function LocationPickerContent() {
     )
     const [zoom, setZoom] = useState(13)
 
-    const [currentAddress, setCurrentAddress] = useState<string>("")
+    const [currentAddressUz, setCurrentAddressUz] = useState<string>("")
+    const [currentAddressRu, setCurrentAddressRu] = useState<string>("")
+    const [currentAddress, setCurrentAddress] = useState<string>("") // Display address
+
     const [searchQuery, setSearchQuery] = useState("")
     const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([])
     const [showSuggestions, setShowSuggestions] = useState(false)
@@ -49,11 +52,7 @@ function LocationPickerContent() {
     // Initial load
     useEffect(() => {
         if (initialLat && initialLng && ymaps) {
-            // Try to fetch address if we have coords but no address passed (we don't pass address in params usually)
-            // But we can trigger a fetch
-            fetchAddress(initialLat, initialLng).then(addr => {
-                if (addr) setCurrentAddress(addr)
-            })
+            fetchAddress(initialLat, initialLng)
         }
     }, [ymaps, initialLat, initialLng])
 
@@ -73,15 +72,42 @@ function LocationPickerContent() {
     }
 
     // Yandex Geocoder
+    // Yandex Geocoder
     const fetchAddress = async (lat: number, lng: number) => {
         if (!ymaps) return undefined;
         try {
-            const res = await ymaps.geocode([lat, lng]);
-            const firstGeoObject = res.geoObjects.get(0);
-            if (firstGeoObject) {
-                const name = firstGeoObject.properties.get('name');
-                return name;
+            // 1. Fetch Uzbek Address (using JS API as it's already configured to uz_UZ via YMaps provider)
+            const resUz = await ymaps.geocode([lat, lng]);
+            const firstGeoObjectUz = resUz.geoObjects.get(0);
+            const addressUz = firstGeoObjectUz ? firstGeoObjectUz.properties.get('name') : "";
+
+            if (addressUz) {
+                setCurrentAddressUz(addressUz);
+                setCurrentAddress(addressUz);
             }
+
+            // 2. Fetch Russian Address via HTTP API
+            // format=json, lang=ru_RU, sco=latlong
+            try {
+                const resRu = await fetch(`https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_API_KEY}&geocode=${lng},${lat}&lang=ru_RU&format=json&sco=longlat&results=1`);
+                // Wait... standard sco is longlat (lng, lat). JS API calls geocode([lat, lng]) because of coordorder: "latlong".
+                // HTTP API default sco is "longlat" -> Expects "lng, lat".
+                // So geocode=${lng},${lat} is correct if sco=longlat (default).
+                const dataRu = await resRu.json();
+
+                // Extract feature member
+                const featureMember = dataRu.response?.GeoObjectCollection?.featureMember?.[0];
+                const addressRu = featureMember?.GeoObject?.name || featureMember?.GeoObject?.metaDataProperty?.GeocoderMetaData?.text || "";
+
+                if (addressRu) {
+                    setCurrentAddressRu(addressRu);
+                }
+            } catch (e) {
+                console.error("Russian address fetch failed", e);
+            }
+
+            return addressUz;
+
         } catch (error) {
             console.error("Yandex Geocode error:", error);
         }
@@ -111,7 +137,8 @@ function LocationPickerContent() {
                 type: 'LOCATION_SELECTED',
                 lat: markerPos[0],
                 lng: markerPos[1],
-                address: currentAddress
+                addressUz: currentAddressUz,
+                addressRu: currentAddressRu
             }, "*");
             window.close();
         }
@@ -152,7 +179,7 @@ function LocationPickerContent() {
         searchTimeoutRef.current = setTimeout(() => fetchSuggestions(value), 300)
     }
 
-    const selectSuggestion = (suggestion: SearchSuggestion) => {
+    const selectSuggestion = async (suggestion: SearchSuggestion) => {
         const newLat = parseFloat(suggestion.lat)
         const newLng = parseFloat(suggestion.lon)
 
@@ -160,55 +187,63 @@ function LocationPickerContent() {
         setMapCenter([newLat, newLng])
         setZoom(16)
 
-        const shortAddr = suggestion.address ? formatAddress(suggestion.address) : suggestion.display_name.split(",")[0];
-        setCurrentAddress(shortAddr);
-        setSearchQuery(shortAddr)
+        // We trigger the full fetch to populate Uzbek and Russian addresses correctly from Yandex
+        // This ensures saving works correctly
+        await fetchAddress(newLat, newLng);
+
+        setSearchQuery(suggestion.display_name.split(",")[0])
         setShowSuggestions(false)
     }
 
     return (
-        <div className="flex flex-col h-screen w-screen overflow-hidden bg-background">
-            {/* Header Area */}
-            <div className="z-20 p-4 bg-background/95 backdrop-blur-md border-b flex items-center justify-between gap-4 shadow-sm shrink-0">
+        <div className="relative h-screen w-screen overflow-hidden bg-background">
+            {/* Header Area - Floating Overlay */}
+            <div className="absolute top-4 left-4 right-4 z-50 flex flex-col gap-4 pointer-events-none">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 w-full max-w-7xl mx-auto pointer-events-auto">
 
-                {/* Search Box */}
-                <div className="relative w-full max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <CustomInput
-                        placeholder="Manzilni qidirish..."
-                        className="pl-9 bg-secondary/50 border-0 focus-visible:ring-1 h-10"
-                        value={searchQuery}
-                        onChange={handleInputChange}
-                    />
-                    {showSuggestions && (
-                        <div className="absolute top-full left-0 right-0 mt-2 bg-popover rounded-lg shadow-lg border p-1 z-50">
-                            {suggestions.map((s, i) => (
-                                <div
-                                    key={i}
-                                    className="p-2 hover:bg-accent rounded-md text-sm cursor-pointer truncate"
-                                    onClick={() => selectSuggestion(s)}
-                                >
-                                    {s.display_name}
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                {/* Address Display & Save Button */}
-                <div className="flex flex-1 items-center justify-end gap-4 min-w-0">
-                    <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground truncate bg-secondary/50 py-2 px-3 rounded-md border border-border/50 max-w-[400px]">
-                        <MapPin className="h-4 w-4 shrink-0 text-emerald-600" />
-                        <span className="truncate font-medium text-foreground">{currentAddress || "Manzil tanlanmagan"}</span>
+                    {/* Search Box - Card Style */}
+                    <div className="relative w-full sm:w-96 shadow-xl rounded-xl transition-all duration-300">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
+                        <CustomInput
+                            placeholder="Manzilni qidirish..."
+                            className="pl-12 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-white/20 dark:border-white/10 h-12 rounded-xl text-base shadow-sm ring-1 ring-black/5 dark:ring-white/10 focus-visible:ring-emerald-500/50 transition-all placeholder:text-muted-foreground/80"
+                            value={searchQuery}
+                            onChange={handleInputChange}
+                        />
+                        {showSuggestions && (
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-white/90 dark:bg-zinc-900/95 backdrop-blur-md rounded-xl shadow-xl border border-black/5 dark:border-white/10 p-1.5 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                                {suggestions.map((s, i) => (
+                                    <div
+                                        key={i}
+                                        className="p-3 hover:bg-emerald-50/80 dark:hover:bg-emerald-900/30 rounded-lg text-sm cursor-pointer truncate transition-colors flex items-center gap-3 group"
+                                        onClick={() => selectSuggestion(s)}
+                                    >
+                                        <MapPin className="h-4 w-4 text-muted-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors shrink-0" />
+                                        <span className="truncate text-foreground/80 group-hover:text-foreground">{s.display_name}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
-                    <Button onClick={handleSave} disabled={!markerPos} className="h-10 px-6 font-semibold shadow-md bg-emerald-600 hover:bg-emerald-700">
-                        SAQLASH
-                    </Button>
+
+                    {/* Address Display & Save Button - Floating Card */}
+                    <div className="flex items-center gap-3 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md p-2 rounded-xl shadow-xl ring-1 ring-black/5 dark:ring-white/10 border border-white/20 dark:border-white/10 w-full sm:w-auto justify-between sm:justify-start">
+                        <div className="flex flex-col gap-0.5 px-3 max-w-[200px] sm:max-w-[300px]">
+                            <span className="text-[10px] uppercase font-bold text-muted-foreground/70 tracking-wider">Tanlangan manzil</span>
+                            <div className="flex items-center gap-2 text-sm font-medium text-foreground truncate">
+                                <MapPin className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                                <span className="truncate">{currentAddress || "Xaritadan tanlang"}</span>
+                            </div>
+                        </div>
+                        <Button onClick={handleSave} disabled={!markerPos} className="rounded-lg shadow-md bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 h-10 transition-all hover:scale-105 active:scale-95 shrink-0">
+                            SAQLASH
+                        </Button>
+                    </div>
                 </div>
             </div>
 
-            {/* Map Container */}
-            <div className="flex-1 w-full h-full relative z-0">
+            {/* Map Container - Fullscreen Underlay */}
+            <div className="absolute inset-0 z-0">
                 <YMaps query={{ apikey: YANDEX_API_KEY, lang: "uz_UZ", coordorder: "latlong" }}>
                     <Map
                         state={{ center: mapCenter, zoom: zoom }}
