@@ -3,16 +3,9 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Stadium } from "@/services/stadium"
 import { Button } from "@/components/ui/button"
-import { ArrowUpDown, MoreHorizontal, Pencil, Trash } from "lucide-react"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { ArrowUpDown } from "lucide-react"
 import Link from "next/link"
+import { CellAction } from "./cell-action"
 
 export const columns: ColumnDef<Stadium>[] = [
     {
@@ -60,32 +53,6 @@ export const columns: ColumnDef<Stadium>[] = [
     },
     {
         id: "actions",
-        cell: ({ row }) => {
-            const stadium = row.original
-
-            return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Amallar</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <Link href={`/stadiums/${stadium.id}`}>
-                            <DropdownMenuItem>
-                                <Pencil className="mr-2 h-4 w-4" /> Tahrirlash
-                            </DropdownMenuItem>
-                        </Link>
-                        {/* Delete action would typically be handled via a callback or context */}
-                        <DropdownMenuItem onClick={() => navigator.clipboard.writeText(stadium.id.toString())}>
-                            ID nusxalash
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            )
-        },
+        cell: ({ row }) => <CellAction data={row.original} />,
     },
 ]
