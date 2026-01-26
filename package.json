@@ -1,0 +1,11 @@
+{
+  "name": "stadion-admin-panel",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd nextjs-version && npm install && npm run build",
+    "dev": "cd nextjs-version && npm run dev",
+    "start": "cd nextjs-version && npm run start",
+    "postinstall": "cd nextjs-version && npm install"
+  }
+}
