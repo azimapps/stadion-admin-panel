@@ -244,7 +244,7 @@ function LocationPickerContent() {
 
             {/* Map Container - Fullscreen Underlay */}
             <div className="absolute inset-0 z-0">
-                <YMaps query={{ apikey: YANDEX_API_KEY, lang: "uz_UZ", coordorder: "latlong" }}>
+                <YMaps query={{ apikey: YANDEX_API_KEY, lang: "ru_RU", coordorder: "latlong" }}>
                     <Map
                         state={{ center: mapCenter, zoom: zoom }}
                         width="100%"

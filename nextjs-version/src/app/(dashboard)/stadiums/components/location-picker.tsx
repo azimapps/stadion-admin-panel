@@ -83,7 +83,7 @@ export default function LocationPicker({ latitude, longitude, onLocationSelect, 
     }
 
     return (
-        <YMaps query={{ apikey: YANDEX_API_KEY, lang: "uz_UZ", coordorder: "latlong" }}>
+        <YMaps query={{ apikey: YANDEX_API_KEY, lang: "ru_RU", coordorder: "latlong" }}>
             <div
                 onClick={openMapPopup}
                 className={cn(
