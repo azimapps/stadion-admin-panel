@@ -1,18 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "builds": [
-    {
-      "src": "nextjs-version/package.json",
-      "use": "@vercel/next",
-      "config": {
-        "installCommand": "npm install --legacy-peer-deps"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/nextjs-version/$1"
-    }
-  ]
+  "buildCommand": "cd nextjs-version && npm run build",
+  "outputDirectory": "nextjs-version/.next",
+  "framework": "nextjs",
+  "installCommand": "cd nextjs-version && npm install --legacy-peer-deps"
 }
