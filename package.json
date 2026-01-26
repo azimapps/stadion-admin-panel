@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "cd nextjs-version && npm install && npm run build",
+    "build": "cd nextjs-version && npm install --legacy-peer-deps && npm run build",
     "dev": "cd nextjs-version && npm run dev",
     "start": "cd nextjs-version && npm run start",
-    "postinstall": "cd nextjs-version && npm install"
+    "postinstall": "cd nextjs-version && npm install --legacy-peer-deps"
   }
 }
