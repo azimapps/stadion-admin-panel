@@ -1,6 +1,6 @@
-import Cookies from 'js-cookie';
+import { apiClient } from '@/lib/api-client';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL + '/api/v1/stadiums';
+const ENDPOINT = '/api/v1/stadiums';
 
 export interface Stadium {
     id: number;
@@ -28,75 +28,22 @@ export interface Stadium {
 
 export const stadiumsService = {
     async getAll(): Promise<Stadium[]> {
-        const token = Cookies.get('token');
-        const response = await fetch(`${API_URL}/`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        if (!response.ok) throw new Error('Failed to fetch stadiums');
-        return response.json();
+        return apiClient.get<Stadium[]>(`${ENDPOINT}/`);
     },
 
     async getById(id: string | number): Promise<Stadium> {
-        // GET /:id is public, but we send token if available
-        const token = Cookies.get('token');
-        const headers: HeadersInit = {};
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        const response = await fetch(`${API_URL}/${id}`, { headers });
-        if (!response.ok) throw new Error('Failed to fetch stadium details');
-        return response.json();
+        return apiClient.get<Stadium>(`${ENDPOINT}/${id}`);
     },
 
     async create(data: Partial<Stadium>): Promise<Stadium> {
-        const token = Cookies.get('token');
-        const response = await fetch(`${API_URL}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(data),
-        });
-        if (!response.ok) throw new Error('Failed to create stadium');
-        return response.json();
+        return apiClient.post<Stadium>(`${ENDPOINT}/`, data);
     },
 
     async update(id: number, data: Partial<Stadium>): Promise<Stadium> {
-        const token = Cookies.get('token');
-        const response = await fetch(`${API_URL}/${id}`, {
-            method: 'PUT', // or PATCH depending on backend, backend docs say PUT
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(data),
-        });
-        if (!response.ok) {
-            const errorText = await response.text();
-            let errorMessage = 'Failed to update stadium';
-            try {
-                const errorJson = JSON.parse(errorText);
-                errorMessage = errorJson.detail || errorJson.message || errorMessage;
-            } catch {
-                errorMessage = errorText || errorMessage;
-            }
-            throw new Error(errorMessage);
-        }
-        return response.json();
+        return apiClient.put<Stadium>(`${ENDPOINT}/${id}`, data);
     },
 
     async delete(id: number): Promise<void> {
-        const token = Cookies.get('token');
-        const response = await fetch(`${API_URL}/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        if (!response.ok) throw new Error('Failed to delete stadium');
+        return apiClient.delete(`${ENDPOINT}/${id}`);
     }
 };
