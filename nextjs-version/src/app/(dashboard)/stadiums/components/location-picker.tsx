@@ -95,13 +95,12 @@ export default function LocationPicker({ latitude, longitude, onLocationSelect, 
                         {/* Preview Map - Static-ish */}
                         <div className="absolute inset-0 z-0 opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none">
                             <Map
-                                state={{ center: [latitude, longitude], zoom: 15 }}
+                                state={{ center: [latitude, longitude], zoom: 15, controls: [] }}
                                 width="100%"
                                 height="100%"
                                 options={{
                                     suppressMapOpenBlock: true,
-                                    yandexMapDisablePoiInteractivity: true,
-                                    controls: [] // No controls for preview
+                                    yandexMapDisablePoiInteractivity: true
                                 }}
                             >
                                 <Placemark geometry={[latitude, longitude]} options={{ preset: "islands#redSportIcon" }} />

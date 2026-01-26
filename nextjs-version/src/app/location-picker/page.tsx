@@ -253,7 +253,6 @@ function LocationPickerContent() {
                         modules={["geocode", "Placemark", "control.ZoomControl", "control.FullscreenControl"]}
                         onClick={handleMapClick}
                         instanceRef={(ref) => (mapRef.current = ref)}
-                        options={{ exclude: ['searchControl'] }}
                     >
                         <ZoomControl options={{ position: { right: 10, top: 100 } } as any} />
                         {markerPos && (
