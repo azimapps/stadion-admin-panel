@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { MoreHorizontal, Pencil, Trash } from "lucide-react"
+import { MoreHorizontal, Pencil, Trash, Eye } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -61,6 +61,11 @@ export function CellAction({ data }: CellActionProps) {
                     <DropdownMenuLabel>Amallar</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <Link href={`/stadiums/${data.id}`}>
+                        <DropdownMenuItem>
+                            <Eye className="mr-2 h-4 w-4" /> Ko'rish
+                        </DropdownMenuItem>
+                    </Link>
+                    <Link href={`/stadiums/${data.id}/edit`}>
                         <DropdownMenuItem>
                             <Pencil className="mr-2 h-4 w-4" /> Tahrirlash
                         </DropdownMenuItem>

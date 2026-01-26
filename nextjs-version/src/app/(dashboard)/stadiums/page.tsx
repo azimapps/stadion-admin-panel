@@ -8,7 +8,10 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Plus } from "lucide-react"
 
+import { useRouter } from "next/navigation"
+
 export default function StadiumsPage() {
+    const router = useRouter()
     const [data, setData] = useState<Stadium[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -45,7 +48,11 @@ export default function StadiumsPage() {
             ) : error ? (
                 <div className="text-red-500">Xatolik: {error}</div>
             ) : (
-                <DataTable columns={columns} data={data} />
+                <DataTable
+                    columns={columns}
+                    data={data}
+                    onRowClick={(row) => router.push(`/stadiums/${row.id}`)}
+                />
             )}
         </div>
     )

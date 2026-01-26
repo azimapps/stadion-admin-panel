@@ -55,8 +55,20 @@ export function LoginForm1({
       toast.success("Muvaffaqiyatli kirildi")
       router.push("/dashboard")
     } catch (error: any) {
-      console.error(error)
-      toast.error(error.message || "Kirishda xatolik yuz berdi")
+      const message = error.message || "Kirishda xatolik yuz berdi";
+
+      // Handle known operational errors (like invalid credentials) without logging stack trace
+      if (message === "Invalid email or password" || message.includes("Invalid")) {
+        // Set form error for better UI feedback
+        form.setError("root", {
+          type: "manual",
+          message: "Email yoki parol noto'g'ri"
+        });
+      } else {
+        // Log unexpected errors
+        console.error(error);
+        toast.error(message);
+      }
     } finally {
       setIsLoading(false)
     }
@@ -112,6 +124,11 @@ export function LoginForm1({
                   <Button type="submit" className="w-full cursor-pointer" disabled={isLoading}>
                     {isLoading ? "Kirish..." : "Kirish"}
                   </Button>
+                  {form.formState.errors.root && (
+                    <div className="text-sm font-medium text-destructive text-center">
+                      {form.formState.errors.root.message}
+                    </div>
+                  )}
                 </div>
               </div>
             </form>
