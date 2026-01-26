@@ -6,5 +6,6 @@ export default function Loading() {
         <p className="text-muted-foreground mt-2">Loading...</p>
       </div>
     </div>
+    
   )
 }
