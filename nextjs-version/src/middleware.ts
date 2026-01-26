@@ -5,8 +5,8 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value
   const { pathname } = request.nextUrl
 
-  // Define public routes that do not require authentication
-  const publicRoutes = [
+  // Auth routes - redirect authenticated users to dashboard
+  const authRoutes = [
     '/sign-in',
     '/sign-up',
     '/forgot-password',
@@ -16,16 +16,22 @@ export function middleware(request: NextRequest) {
     '/sign-in-3',
     '/sign-up-2',
     '/sign-up-3',
+  ]
+
+  // Public routes - accessible without authentication
+  const publicRoutes = [
+    ...authRoutes,
     '/errors',
     '/landing',
     '/location-picker'
   ]
 
-  // Check if the current route is public
+  // Check if the current route is public or auth
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
+  const isAuthRoute = authRoutes.some(route => pathname.startsWith(route))
 
   // 1. If user has token and tries to access auth routes, redirect to dashboard
-  if (token && isPublicRoute) {
+  if (token && isAuthRoute) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
