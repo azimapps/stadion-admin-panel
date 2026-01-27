@@ -52,6 +52,11 @@ const data = {
           url: "/stadiums",
           icon: MapPin,
         },
+        {
+          title: "Managerlar",
+          url: "/users",
+          icon: Users,
+        },
       ],
     },
   ],

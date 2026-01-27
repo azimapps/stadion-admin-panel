@@ -59,22 +59,17 @@ interface User {
   id: number
   name: string
   email: string
-  avatar: string
+  phone: string
   role: string
-  plan: string
-  billing: string
-  status: string
   joinedDate: string
-  lastLogin: string
 }
 
 interface UserFormValues {
   name: string
   email: string
+  phone: string
   role: string
-  plan: string
-  billing: string
-  status: string
+  password?: string
 }
 
 interface DataTableProps {
@@ -157,14 +152,14 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
     },
     {
       accessorKey: "name",
-      header: "User",
+      header: "F.I.O",
       cell: ({ row }) => {
         const user = row.original
         return (
           <div className="flex items-center gap-3">
             <Avatar className="h-8 w-8">
               <AvatarFallback className="text-xs font-medium">
-                {user.avatar}
+                {user.name.substring(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
@@ -176,8 +171,13 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
       },
     },
     {
+      accessorKey: "phone",
+      header: "Telefon",
+      cell: ({ row }) => <span className="text-sm">{row.original.phone}</span>,
+    },
+    {
       accessorKey: "role",
-      header: "Role",
+      header: "Rol",
       cell: ({ row }) => {
         const role = row.getValue("role") as string
         return (
@@ -189,34 +189,9 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
       filterFn: exactFilter,
     },
     {
-      accessorKey: "plan",
-      header: "Plan",
-      cell: ({ row }) => {
-        const plan = row.getValue("plan") as string
-        return <span className="font-medium">{plan}</span>
-      },
-      filterFn: exactFilter,
-    },
-    {
-      accessorKey: "billing",
-      header: "Billing",
-      cell: ({ row }) => {
-        const billing = row.getValue("billing") as string
-        return <span className="text-sm">{billing}</span>
-      },
-    },
-    {
-      accessorKey: "status",
-      header: "Status",
-      cell: ({ row }) => {
-        const status = row.getValue("status") as string
-        return (
-          <Badge variant="secondary" className={getStatusColor(status)}>
-            {status}
-          </Badge>
-        )
-      },
-      filterFn: exactFilter,
+      accessorKey: "joinedDate",
+      header: "Qo'shilgan sana",
+      cell: ({ row }) => <span className="text-sm">{row.original.joinedDate}</span>,
     },
     {
       id: "actions",
@@ -294,8 +269,6 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
   })
 
   const roleFilter = table.getColumn("role")?.getFilterValue() as string
-  const planFilter = table.getColumn("plan")?.getFilterValue() as string
-  const statusFilter = table.getColumn("status")?.getFilterValue() as string
 
   return (
     <div className="w-full space-y-4">
@@ -323,7 +296,7 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
       <div className="grid gap-2 sm:grid-cols-4 sm:gap-4">
         <div className="space-y-2">
           <Label htmlFor="role-filter" className="text-sm font-medium">
-            Role
+            Rol
           </Label>
           <Select
             value={roleFilter || ""}
@@ -332,58 +305,12 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
             }
           >
             <SelectTrigger className="cursor-pointer w-full" id="role-filter">
-              <SelectValue placeholder="Select Role" />
+              <SelectValue placeholder="Rolni tanlang" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Roles</SelectItem>
+              <SelectItem value="all">Barchasi</SelectItem>
               <SelectItem value="Admin">Admin</SelectItem>
-              <SelectItem value="Author">Author</SelectItem>
-              <SelectItem value="Editor">Editor</SelectItem>
-              <SelectItem value="Maintainer">Maintainer</SelectItem>
-              <SelectItem value="Subscriber">Subscriber</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="plan-filter" className="text-sm font-medium">
-            Plan
-          </Label>
-          <Select
-            value={planFilter || ""}
-            onValueChange={(value) =>
-              table.getColumn("plan")?.setFilterValue(value === "all" ? "" : value)
-            }
-          >
-            <SelectTrigger className="cursor-pointer w-full" id="plan-filter">
-              <SelectValue placeholder="Select Plan" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Plans</SelectItem>
-              <SelectItem value="Basic">Basic</SelectItem>
-              <SelectItem value="Professional">Professional</SelectItem>
-              <SelectItem value="Enterprise">Enterprise</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="status-filter" className="text-sm font-medium">
-            Status
-          </Label>
-          <Select
-            value={statusFilter || ""}
-            onValueChange={(value) =>
-              table.getColumn("status")?.setFilterValue(value === "all" ? "" : value)
-            }
-          >
-            <SelectTrigger className="cursor-pointer w-full" id="status-filter">
-              <SelectValue placeholder="Select Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Pending">Pending</SelectItem>
-              <SelectItem value="Error">Error</SelectItem>
-              <SelectItem value="Inactive">Inactive</SelectItem>
+              <SelectItem value="Manager">Manager</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -432,9 +359,9 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   )
                 })}

@@ -34,22 +34,19 @@ import { zodResolver } from "@hookform/resolvers/zod"
 
 const userFormSchema = z.object({
   name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
+    message: "Ism kamida 2 ta harfdan iborat bo'lishi kerak.",
   }),
   email: z.string().email({
-    message: "Please enter a valid email address.",
+    message: "Noto'g'ri email manzili.",
+  }),
+  phone: z.string().min(9, {
+    message: "Telefon raqamini to'g'ri kiriting.",
   }),
   role: z.string().min(1, {
-    message: "Please select a role.",
+    message: "Rolni tanlang.",
   }),
-  plan: z.string().min(1, {
-    message: "Please select a plan.",
-  }),
-  billing: z.string().min(1, {
-    message: "Please select a billing method.",
-  }),
-  status: z.string().min(1, {
-    message: "Please select a status.",
+  password: z.string().min(6, {
+    message: "Parol kamida 6 ta belgidan iborat bo'lishi kerak.",
   }),
 })
 
@@ -67,10 +64,9 @@ export function UserFormDialog({ onAddUser }: UserFormDialogProps) {
     defaultValues: {
       name: "",
       email: "",
+      phone: "",
       role: "",
-      plan: "",
-      billing: "",
-      status: "",
+      password: "",
     },
   })
 
@@ -85,14 +81,14 @@ export function UserFormDialog({ onAddUser }: UserFormDialogProps) {
       <DialogTrigger asChild>
         <Button className="cursor-pointer">
           <Plus className="mr-2 h-4 w-4" />
-          Add New User
+          Yangi Manager Qo'shish
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add New User</DialogTitle>
+          <DialogTitle>Yangi Manager Qo'shish</DialogTitle>
           <DialogDescription>
-            Create a new user account. Click save when you&apos;re done.
+            Yangi manager ma'lumotlarini kiriting.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -102,9 +98,9 @@ export function UserFormDialog({ onAddUser }: UserFormDialogProps) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>F.I.O</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter full name" {...field} />
+                    <Input placeholder="Ism Familiya" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -117,110 +113,62 @@ export function UserFormDialog({ onAddUser }: UserFormDialogProps) {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter email address" {...field} />
+                    <Input placeholder="email@example.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Role</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="cursor-pointer w-full">
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Admin">Admin</SelectItem>
-                        <SelectItem value="Author">Author</SelectItem>
-                        <SelectItem value="Editor">Editor</SelectItem>
-                        <SelectItem value="Maintainer">Maintainer</SelectItem>
-                        <SelectItem value="Subscriber">Subscriber</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="plan"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Plan</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="cursor-pointer w-full">
-                          <SelectValue placeholder="Select plan" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Basic">Basic</SelectItem>
-                        <SelectItem value="Professional">Professional</SelectItem>
-                        <SelectItem value="Enterprise">Enterprise</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="billing"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Billing</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="cursor-pointer w-full">
-                          <SelectValue placeholder="Select billing" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Auto Debit">Auto Debit</SelectItem>
-                        <SelectItem value="UPI">UPI</SelectItem>
-                        <SelectItem value="Paypal">Paypal</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="cursor-pointer w-full">
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="Pending">Pending</SelectItem>
-                        <SelectItem value="Error">Error</SelectItem>
-                        <SelectItem value="Inactive">Inactive</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Telefon raqami</FormLabel>
+                  <FormControl>
+                    <Input placeholder="+998 90 123 45 67" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Parol</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="******" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Rol</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="cursor-pointer w-full">
+                        <SelectValue placeholder="Rolni tanlang" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Admin">Admin</SelectItem>
+                      <SelectItem value="Manager">Manager</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <DialogFooter>
-              <Button type="submit" className="cursor-pointer">
-                Save User
+              <Button type="submit" className="cursor-pointer w-full">
+                Saqlash
               </Button>
             </DialogFooter>
           </form>
