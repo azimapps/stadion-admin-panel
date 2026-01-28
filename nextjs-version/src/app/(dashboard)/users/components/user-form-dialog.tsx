@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -14,43 +14,32 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Plus } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Search, X, Check, Plus } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { Switch } from "@/components/ui/switch"
+import { Stadium, stadiumsService } from "@/services/stadium"
+import { cn } from "@/lib/utils"
 
 const userFormSchema = z.object({
   name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
+    message: "Ism kamida 2 ta belgidan iborat bo'lishi kerak.",
   }),
-  email: z.string().email({
-    message: "Please enter a valid email address.",
+  phone: z.string().min(17, {
+    message: "Telefon raqamini to'liq kiriting (masalan: +998 90 123 45 67).",
   }),
-  role: z.string().min(1, {
-    message: "Please select a role.",
-  }),
-  plan: z.string().min(1, {
-    message: "Please select a plan.",
-  }),
-  billing: z.string().min(1, {
-    message: "Please select a billing method.",
-  }),
-  status: z.string().min(1, {
-    message: "Please select a status.",
-  }),
+  stadium_ids: z.array(z.number()),
+  is_active: z.boolean(),
 })
 
 type UserFormValues = z.infer<typeof userFormSchema>
@@ -61,16 +50,22 @@ interface UserFormDialogProps {
 
 export function UserFormDialog({ onAddUser }: UserFormDialogProps) {
   const [open, setOpen] = useState(false)
+  const [stadiums, setStadiums] = useState<Stadium[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
+
+  useEffect(() => {
+    if (open) {
+      stadiumsService.getAll().then(setStadiums).catch(console.error)
+    }
+  }, [open])
 
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userFormSchema),
     defaultValues: {
       name: "",
-      email: "",
-      role: "",
-      plan: "",
-      billing: "",
-      status: "",
+      phone: "",
+      stadium_ids: [],
+      is_active: true,
     },
   })
 
@@ -80,151 +75,253 @@ export function UserFormDialog({ onAddUser }: UserFormDialogProps) {
     setOpen(false)
   }
 
+  const filteredStadiums = stadiums.filter(s =>
+    s.name_uz.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (s.name_ru && s.name_ru.toLowerCase().includes(searchQuery.toLowerCase()))
+  )
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="cursor-pointer">
           <Plus className="mr-2 h-4 w-4" />
-          Add New User
+          Yangi manager
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Add New User</DialogTitle>
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+        <DialogHeader className="p-6 pb-2">
+          <DialogTitle>Yangi manager qo'shish</DialogTitle>
           <DialogDescription>
-            Create a new user account. Click save when you&apos;re done.
+            Tizimga yangi manager qo'shing. Barcha maydonlarni to'ldiring.
           </DialogDescription>
         </DialogHeader>
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter full name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter email address" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 overflow-y-auto p-6 pt-2 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="role"
+                name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Role</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="cursor-pointer w-full">
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Admin">Admin</SelectItem>
-                        <SelectItem value="Author">Author</SelectItem>
-                        <SelectItem value="Editor">Editor</SelectItem>
-                        <SelectItem value="Maintainer">Maintainer</SelectItem>
-                        <SelectItem value="Subscriber">Subscriber</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>F.I.SH</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ism va familiyani kiriting" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <FormField
                 control={form.control}
-                name="plan"
+                name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Plan</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="cursor-pointer w-full">
-                          <SelectValue placeholder="Select plan" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Basic">Basic</SelectItem>
-                        <SelectItem value="Professional">Professional</SelectItem>
-                        <SelectItem value="Enterprise">Enterprise</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Telefon raqami</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="+998 99 123 45 67"
+                        {...field}
+                        onChange={(e) => {
+                          let val = e.target.value;
+                          let digits = val.replace(/\D/g, '');
+                          if (digits.length > 0 && !digits.startsWith('998')) {
+                            digits = '998' + digits;
+                          }
+                          let formatted = '';
+                          if (digits.length > 0) {
+                            formatted = '+' + digits.substring(0, 3);
+                            if (digits.length > 3) formatted += ' ' + digits.substring(3, 5);
+                            if (digits.length > 5) formatted += ' ' + digits.substring(5, 8);
+                            if (digits.length > 8) formatted += ' ' + digits.substring(8, 10);
+                            if (digits.length > 10) formatted += ' ' + digits.substring(10, 12);
+                          }
+                          if (digits.length <= 12) field.onChange(formatted);
+                        }}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="billing"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Billing</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="cursor-pointer w-full">
-                          <SelectValue placeholder="Select billing" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Auto Debit">Auto Debit</SelectItem>
-                        <SelectItem value="UPI">UPI</SelectItem>
-                        <SelectItem value="Paypal">Paypal</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="cursor-pointer w-full">
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="Pending">Pending</SelectItem>
-                        <SelectItem value="Error">Error</SelectItem>
-                        <SelectItem value="Inactive">Inactive</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <DialogFooter>
-              <Button type="submit" className="cursor-pointer">
-                Save User
-              </Button>
-            </DialogFooter>
+
+            <FormField
+              control={form.control}
+              name="stadium_ids"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <FormLabel className="text-base font-semibold">Stadionlar</FormLabel>
+                      <FormDescription>
+                        Boshqaruv uchun stadionlarni tanlang ({field.value?.length || 0} ta tanlandi)
+                      </FormDescription>
+                    </div>
+                    {stadiums.length > 0 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-primary hover:text-primary/80 h-8 px-2"
+                        onClick={() => {
+                          const allIds = stadiums.map(s => typeof s.id === 'string' ? parseInt(s.id) : s.id);
+                          if (field.value?.length === stadiums.length) {
+                            field.onChange([]);
+                          } else {
+                            field.onChange(allIds);
+                          }
+                        }}
+                      >
+                        {field.value?.length === stadiums.length ? "Barchasini bekor qilish" : "Barchasini tanlash"}
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Stadionlarni qidirish..."
+                      className="pl-9 h-10"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    {searchQuery && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 size-7"
+                        onClick={() => setSearchQuery("")}
+                      >
+                        <X className="size-3" />
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="border rounded-xl shadow-sm overflow-hidden bg-muted/30">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-border">
+                      {filteredStadiums.length > 0 ? (
+                        filteredStadiums.map((stadium) => {
+                          const stadiumId = typeof stadium.id === 'string' ? parseInt(stadium.id) : stadium.id;
+                          const isSelected = field.value?.includes(stadiumId);
+                          return (
+                            <div
+                              key={stadium.id}
+                              className={cn(
+                                "flex items-center gap-3 p-3 bg-background hover:bg-muted/50 transition-colors cursor-pointer group",
+                                isSelected && "bg-primary/5"
+                              )}
+                              onClick={() => {
+                                if (isSelected) {
+                                  field.onChange(field.value.filter((id: number) => id !== stadiumId));
+                                } else {
+                                  field.onChange([...(field.value || []), stadiumId]);
+                                }
+                              }}
+                            >
+                              <div className={cn(
+                                "size-5 rounded border flex items-center justify-center transition-colors shadow-sm",
+                                isSelected ? "bg-primary border-primary text-primary-foreground" : "border-input bg-background"
+                              )}>
+                                {isSelected && <Check className="size-3.5 stroke-[3]" />}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className={cn(
+                                  "text-sm font-medium truncate",
+                                  isSelected ? "text-primary" : "text-foreground"
+                                )}>
+                                  {stadium.name_uz}
+                                </p>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {stadium.capacity} • {stadium.surface_type === 'artificial' ? 'Sun\'iy' : 'Tabiiy'}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="col-span-full p-8 text-center bg-background">
+                          <p className="text-sm text-muted-foreground italic">Stadionlar topilmadi</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {field.value?.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-3">
+                      {field.value.map((id: number) => {
+                        const s = stadiums.find(st => (typeof st.id === 'string' ? parseInt(st.id) : st.id) === id);
+                        if (!s) return null;
+                        return (
+                          <Badge
+                            key={id}
+                            variant="secondary"
+                            className="pl-2 pr-1.5 py-0.5 rounded-full bg-primary/10 border-primary/20 text-primary-foreground hover:bg-primary/20 max-w-[180px]"
+                          >
+                            <span className="truncate text-xs">{s.name_uz}</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="size-4 ml-1 hover:bg-primary/20 rounded-full"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                field.onChange(field.value.filter((val: number) => val !== id));
+                              }}
+                            >
+                              <X className="size-2.5" />
+                            </Button>
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="is_active"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-2xl border bg-muted/20 p-4 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base text-foreground font-medium">Faol holati</FormLabel>
+                    <FormDescription>
+                      Manager tizimga kira oladimi?
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
           </form>
         </Form>
+
+        <DialogFooter className="p-6 pt-2 border-t bg-muted/50">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setOpen(false)}
+            className="rounded-xl"
+          >
+            Bekor qilish
+          </Button>
+          <Button
+            type="submit"
+            onClick={form.handleSubmit(onSubmit)}
+            className="cursor-pointer rounded-xl bg-primary px-8"
+          >
+            Saqlash
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

@@ -1,43 +1,36 @@
 import { Card, CardContent } from "@/components/ui/card"
-import {Users, CreditCard, UserCheck, Clock5, TrendingUp, TrendingDown, ArrowUpRight} from "lucide-react"
+import { Users, CreditCard, UserCheck, Clock5, TrendingUp, TrendingDown, ArrowUpRight } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from '@/lib/utils'
 
 
 const performanceMetrics = [
   {
-    title: 'Total Users',
-    current: '$2.4M',
-    previous: '$1.8M',
+    title: 'Jami managerlar',
+    current: '24',
+    previous: '18',
     growth: 33.3,
     icon: Users,
   },
   {
-    title: 'Paid Users',
-    current: '12.5K',
-    previous: '9.2K',
-    growth: 35.9,
-    icon: CreditCard,
-  },
-  {
-    title: 'Active Users',
-    current: '8.9k',
-    previous: '6.7k',
-    growth: 32.8,
+    title: 'Faol managerlar',
+    current: '21',
+    previous: '15',
+    growth: 40.0,
     icon: UserCheck,
   },
   {
-    title: 'Pending Users',
-    current: '17%',
-    previous: '24%',
-    growth: -8.0,
+    title: 'Nofaol managerlar',
+    current: '3',
+    previous: '3',
+    growth: 0,
     icon: Clock5,
   },
 ]
 
 export function StatCards() {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {performanceMetrics.map((metric, index) => (
         <Card key={index} className='border'>
           <CardContent className='space-y-4'>
