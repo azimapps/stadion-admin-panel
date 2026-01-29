@@ -43,10 +43,10 @@ export default function UsersPage() {
     setUsers(prev => prev.filter(user => user.id !== id))
   }
 
-  const handleEditUser = (user: User) => {
-    // For now, just log the user to edit
-    // In a real app, you'd open an edit dialog
-    console.log("Edit user:", user)
+  const handleEditUser = (updatedUser: User) => {
+    setUsers(prev => prev.map(user =>
+      user.id === updatedUser.id ? { ...updatedUser, updated_at: new Date().toISOString() } : user
+    ))
   }
 
   return (

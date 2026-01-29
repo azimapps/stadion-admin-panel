@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/dialog"
 import { CAPACITY_TYPES, METRO_STATIONS, ROOF_TYPES, SURFACE_TYPES } from "./stadium-constants"
 import { uploadService } from "@/services/upload"
-import { Loader2, Plus, Trash, Upload } from "lucide-react"
+import { Loader2, Plus, Trash, Upload, LayoutGrid, Info, MapPin, Image as ImageIcon, Users, BadgeDollarSign, Phone, TrainFront } from "lucide-react"
 import dynamic from "next/dynamic"
 import { toast } from "sonner"
 
@@ -257,11 +257,23 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
             <Form {...form}>
                 <form className="space-y-8">
                     <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-                        <TabsList className="grid w-full grid-cols-4">
-                            <TabsTrigger value="main">Asosiy</TabsTrigger>
-                            <TabsTrigger value="info">Ma&apos;lumotlar</TabsTrigger>
-                            <TabsTrigger value="location">Manzil</TabsTrigger>
-                            <TabsTrigger value="media">Media</TabsTrigger>
+                        <TabsList className="grid w-full grid-cols-4 h-14 p-1.5 bg-muted/50 backdrop-blur-sm rounded-2xl border border-border/50 shadow-inner">
+                            <TabsTrigger value="main" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md transition-all gap-2 py-2">
+                                <LayoutGrid className="size-4 opacity-70 group-data-[state=active]:opacity-100" />
+                                <span className="hidden sm:inline">Asosiy</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="info" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md transition-all gap-2 py-2">
+                                <Info className="size-4 opacity-70 group-data-[state=active]:opacity-100" />
+                                <span className="hidden sm:inline">Ma&apos;lumotlar</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="location" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md transition-all gap-2 py-2">
+                                <MapPin className="size-4 opacity-70 group-data-[state=active]:opacity-100" />
+                                <span className="hidden sm:inline">Manzil</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="media" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md transition-all gap-2 py-2">
+                                <ImageIcon className="size-4 opacity-70 group-data-[state=active]:opacity-100" />
+                                <span className="hidden sm:inline">Media</span>
+                            </TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="main" className="space-y-4 pt-4">
@@ -295,16 +307,19 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                     name="capacity"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Sig&apos;imi</FormLabel>
+                                            <FormLabel className="flex items-center gap-2">
+                                                <Users className="size-3.5 text-muted-foreground" />
+                                                Sig&apos;imi
+                                            </FormLabel>
                                             <Select onValueChange={field.onChange} value={field.value}>
                                                 <FormControl>
-                                                    <SelectTrigger>
+                                                    <SelectTrigger className="h-11 rounded-xl bg-background/50 border-border/50">
                                                         <SelectValue placeholder="Sig'imni tanlang" />
                                                     </SelectTrigger>
                                                 </FormControl>
-                                                <SelectContent>
+                                                <SelectContent className="rounded-xl">
                                                     {CAPACITY_TYPES.map((type) => (
-                                                        <SelectItem key={type.value} value={type.value}>
+                                                        <SelectItem key={type.value} value={type.value} className="rounded-lg m-1">
                                                             {type.label}
                                                         </SelectItem>
                                                     ))}
@@ -319,9 +334,12 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                     name="price_per_hour"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Soatiga narx (UZS)</FormLabel>
+                                            <FormLabel className="flex items-center gap-2">
+                                                <BadgeDollarSign className="size-3.5 text-muted-foreground" />
+                                                Soatiga narx (UZS)
+                                            </FormLabel>
                                             <FormControl>
-                                                <Input type="number" step="1000" {...field} />
+                                                <Input type="number" step="1000" {...field} className="h-11 rounded-xl bg-background/50 border-border/50" />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -382,7 +400,10 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                             <Separator className="my-2" />
 
                             <div>
-                                <FormLabel>Telefon raqamlar</FormLabel>
+                                <FormLabel className="flex items-center gap-2 mb-2">
+                                    <Phone className="size-3.5 text-muted-foreground" />
+                                    Telefon raqamlar
+                                </FormLabel>
                                 <div className="space-y-2 mt-2">
                                     {fields.map((field, index) => (
                                         <div key={field.id} className="flex gap-2">
@@ -397,6 +418,7 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                                                 <Input
                                                                     {...field}
                                                                     placeholder="(90) 123-45-67"
+                                                                    className="h-11 rounded-xl bg-background/50 border-border/50"
                                                                     value={(field.value || "").replace(/^\+998\s?/, '')}
                                                                     onChange={(e) => {
                                                                         let value = e.target.value.replace(/\D/g, '').substring(0, 9);
@@ -457,6 +479,7 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                             <FormControl>
                                                 <Input
                                                     placeholder="Chilonzor Arena"
+                                                    className="h-11 rounded-xl bg-background/50 border-border/50"
                                                     {...field}
                                                     onChange={(e) => {
                                                         field.onChange(e);
@@ -479,7 +502,7 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                         <FormItem>
                                             <FormLabel>Название 🇷🇺</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Чилонзор Арена" {...field} />
+                                                <Input placeholder="Чилонзор Арена" {...field} className="h-11 rounded-xl bg-background/50 border-border/50" />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -496,6 +519,7 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                         <FormControl>
                                             <Input
                                                 placeholder="stadion-nomi"
+                                                className="h-11 rounded-xl bg-background/50 border-border/50"
                                                 {...field}
                                                 onChange={(e) => {
                                                     // Auto-format: lowercase, replace spaces with dashes, remove invalid chars
@@ -584,9 +608,12 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                             name="address_uz"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Manzil 🇺🇿</FormLabel>
+                                                    <FormLabel className="flex items-center gap-2">
+                                                        <MapPin className="size-3.5 text-muted-foreground" />
+                                                        Manzil 🇺🇿
+                                                    </FormLabel>
                                                     <FormControl>
-                                                        <Input placeholder="Toshkent sh., ..." {...field} />
+                                                        <Input placeholder="Toshkent sh., ..." {...field} className="h-11 rounded-xl bg-background/50 border-border/50" />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -597,9 +624,12 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                             name="address_ru"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Адрес 🇷🇺</FormLabel>
+                                                    <FormLabel className="flex items-center gap-2">
+                                                        <MapPin className="size-3.5 text-muted-foreground" />
+                                                        Адрес 🇷🇺
+                                                    </FormLabel>
                                                     <FormControl>
-                                                        <Input placeholder="г. Ташкент, ..." {...field} />
+                                                        <Input placeholder="г. Ташкент, ..." {...field} className="h-11 rounded-xl bg-background/50 border-border/50" />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -651,7 +681,8 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                             />
                                         </FormControl>
                                         <div className="space-y-1 leading-none">
-                                            <FormLabel>
+                                            <FormLabel className="flex items-center gap-2 cursor-pointer">
+                                                <TrainFront className="size-4 text-muted-foreground mr-1" />
                                                 Metro yaqinmi?
                                             </FormLabel>
                                         </div>
@@ -854,13 +885,16 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                         </TabsContent>
                     </Tabs>
 
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center bg-muted/30 p-4 rounded-2xl border border-border/50 mt-8">
                         <Button
                             type="button"
                             variant="outline"
                             onClick={handlePrevious}
                             disabled={currentTab === "main" || uploading}
-                            className={currentTab === "main" ? "invisible" : ""}
+                            className={cn(
+                                "rounded-xl px-6 h-11 border-border/50 hover:bg-background transition-all",
+                                currentTab === "main" ? "invisible" : ""
+                            )}
                         >
                             Avvalgisi
                         </Button>
@@ -870,6 +904,7 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                 type="button"
                                 disabled={loading || uploading}
                                 onClick={handlePreSave}
+                                className="rounded-xl px-8 h-11 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-95"
                             >
                                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Saqlash
@@ -878,6 +913,7 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                             <Button
                                 type="button"
                                 onClick={handleNext}
+                                className="rounded-xl px-8 h-11 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-95"
                             >
                                 Keyingisi
                             </Button>

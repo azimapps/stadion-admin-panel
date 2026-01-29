@@ -30,42 +30,56 @@ const performanceMetrics = [
 
 export function StatCards() {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {performanceMetrics.map((metric, index) => (
-        <Card key={index} className='border'>
-          <CardContent className='space-y-4'>
+        <Card key={index} className='group relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm transition-all hover:shadow-xl hover:-translate-y-1 duration-300 rounded-3xl'>
+          {/* Background Decoration */}
+          <div className="absolute -right-4 -top-4 size-24 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors" />
+
+          <CardContent className='relative p-5 space-y-4'>
             <div className='flex items-center justify-between'>
-              <metric.icon className='text-muted-foreground size-6' />
+              <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
+                <metric.icon className='size-5 opacity-80' />
+              </div>
+
               <Badge
                 variant='outline'
                 className={cn(
+                  "rounded-full px-2 py-0.5 font-bold text-[10px] border-0",
                   metric.growth >= 0
-                    ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/20 dark:text-green-400'
-                    : 'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/20 dark:text-red-400',
+                    ? 'bg-green-500/10 text-green-500'
+                    : 'bg-red-500/10 text-red-500',
                 )}
               >
                 {metric.growth >= 0 ? (
-                  <>
-                    <TrendingUp className='me-1 size-3' />
-                    {metric.growth >= 0 ? '+' : ''}
-                    {metric.growth}%
-                  </>
+                  <TrendingUp className='me-1 size-3 stroke-[2.5]' />
                 ) : (
-                  <>
-                    <TrendingDown className='me-1 size-3' />
-                    {metric.growth}%
-                  </>
+                  <TrendingDown className='me-1 size-3 stroke-[2.5]' />
                 )}
+                {metric.growth >= 0 ? '+' : ''}{metric.growth}%
               </Badge>
             </div>
 
-            <div className='space-y-2'>
-              <p className='text-muted-foreground text-sm font-medium'>{metric.title}</p>
-              <div className='text-2xl font-bold'>{metric.current}</div>
-              <div className='text-muted-foreground flex items-center gap-2 text-sm'>
-                <span>from {metric.previous}</span>
-                <ArrowUpRight className='size-3' />
+            <div className='space-y-1'>
+              <p className='text-muted-foreground text-[10px] font-bold tracking-wider uppercase'>{metric.title}</p>
+              <div className='flex items-baseline gap-2'>
+                <h2 className='text-3xl font-black tracking-tight'>{metric.current}</h2>
+                <div className='text-muted-foreground/60 flex items-center gap-1 text-[10px] font-bold bg-muted px-2 py-0.5 rounded-full'>
+                  <span>avval: {metric.previous}</span>
+                  <ArrowUpRight className={cn("size-2.5", metric.growth >= 0 ? "text-green-500" : "text-red-500")} />
+                </div>
               </div>
+            </div>
+
+            {/* Progress indicator */}
+            <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all duration-1000",
+                  metric.growth >= 0 ? "bg-green-500" : "bg-red-500"
+                )}
+                style={{ width: `${Math.min(100, (Number(metric.current) / (Number(metric.previous) || 1)) * 100)}%` }}
+              />
             </div>
           </CardContent>
         </Card>

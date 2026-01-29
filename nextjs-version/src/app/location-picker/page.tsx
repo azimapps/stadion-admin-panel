@@ -24,6 +24,22 @@ interface SearchSuggestion {
     };
 }
 
+// Comprehensive Uzbek Cyrillic to Latin transliteration
+const toLatin = (text: string): string => {
+    if (!text) return "";
+    const map: Record<string, string> = {
+        'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'Yo', 'Ж': 'J', 'З': 'Z', 'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M', 'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'У': 'U', 'Ф': 'F', 'Х': 'X', 'Ц': 'Ts', 'Ч': 'Ch', 'Ш': 'Sh', 'Ъ': "'", 'Ь': '', 'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya',
+        'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'j', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'x', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'ъ': "'", 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
+        'Ў': "O'", 'ў': "o'", 'Қ': 'Q', 'қ': 'q', 'Ғ': "G'", 'ғ': "g'", 'Ҳ': 'H', 'ҳ': 'h'
+    };
+
+    // Handle specific character combinations first
+    let result = text;
+    // Handle 'sh', 'ch', 'yo', 'ya', etc are already in map as single chars if applicable
+    // but just in case, we map carefully
+    return result.split('').map(char => map[char] || char).join('');
+};
+
 function LocationPickerContent() {
     const searchParams = useSearchParams()
 
@@ -74,42 +90,33 @@ function LocationPickerContent() {
     // Yandex Geocoder
     // Yandex Geocoder
     const fetchAddress = async (lat: number, lng: number) => {
-        if (!ymaps) return undefined;
         try {
-            // 1. Fetch Uzbek Address (using JS API as it's already configured to uz_UZ via YMaps provider)
-            const resUz = await ymaps.geocode([lat, lng]);
-            const firstGeoObjectUz = resUz.geoObjects.get(0);
-            const addressUz = firstGeoObjectUz ? firstGeoObjectUz.properties.get('name') : "";
+            // 1. Fetch data from Yandex for both languages in parallel
+            const [respUz, respRu] = await Promise.all([
+                fetch(`https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_API_KEY}&geocode=${lng},${lat}&lang=uz_UZ&format=json&results=1`),
+                fetch(`https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_API_KEY}&geocode=${lng},${lat}&lang=ru_RU&format=json&results=1`)
+            ]);
 
-            if (addressUz) {
-                setCurrentAddressUz(addressUz);
-                setCurrentAddress(addressUz);
-            }
+            const [dataUz, dataRu] = await Promise.all([respUz.json(), respRu.json()]);
 
-            // 2. Fetch Russian Address via HTTP API
-            // format=json, lang=ru_RU, sco=latlong
-            try {
-                const resRu = await fetch(`https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_API_KEY}&geocode=${lng},${lat}&lang=ru_RU&format=json&sco=longlat&results=1`);
-                // Wait... standard sco is longlat (lng, lat). JS API calls geocode([lat, lng]) because of coordorder: "latlong".
-                // HTTP API default sco is "longlat" -> Expects "lng, lat".
-                // So geocode=${lng},${lat} is correct if sco=longlat (default).
-                const dataRu = await resRu.json();
+            const objUz = dataUz.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject;
+            const objRu = dataRu.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject;
 
-                // Extract feature member
-                const featureMember = dataRu.response?.GeoObjectCollection?.featureMember?.[0];
-                const addressRu = featureMember?.GeoObject?.name || featureMember?.GeoObject?.metaDataProperty?.GeocoderMetaData?.text || "";
+            // Get the best possible strings (name is usually more concise than full text)
+            const rawUz = objUz?.name || objUz?.metaDataProperty?.GeocoderMetaData?.text || "";
+            const rawRu = objRu?.name || objRu?.metaDataProperty?.GeocoderMetaData?.text || "";
 
-                if (addressRu) {
-                    setCurrentAddressRu(addressRu);
-                }
-            } catch (e) {
-                console.error("Russian address fetch failed", e);
-            }
+            // Force transliterate Uzbek to Latin to guarantee Latin script
+            const latinUz = toLatin(rawUz);
 
-            return addressUz;
+            setCurrentAddressUz(latinUz);
+            setCurrentAddressRu(rawRu);
+            setCurrentAddress(latinUz);
+
+            return latinUz;
 
         } catch (error) {
-            console.error("Yandex Geocode error:", error);
+            console.error("Geocoding failed:", error);
         }
         return undefined;
     }
@@ -244,7 +251,7 @@ function LocationPickerContent() {
 
             {/* Map Container - Fullscreen Underlay */}
             <div className="absolute inset-0 z-0">
-                <YMaps query={{ apikey: YANDEX_API_KEY, lang: "ru_RU", coordorder: "latlong" }}>
+                <YMaps query={{ apikey: YANDEX_API_KEY, lang: "uz_UZ" as any, coordorder: "latlong" }}>
                     <Map
                         state={{ center: mapCenter, zoom: zoom }}
                         width="100%"

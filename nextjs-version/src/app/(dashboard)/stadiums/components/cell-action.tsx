@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { MoreHorizontal, Pencil, Trash, Eye } from "lucide-react"
+import { EllipsisVertical, Pencil, Trash2, Eye } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -10,7 +10,6 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -50,47 +49,57 @@ export function CellAction({ data }: CellActionProps) {
 
     return (
         <>
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Menyuni ochish</span>
-                        <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Amallar</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <Link href={`/stadiums/${data.id}`}>
-                        <DropdownMenuItem>
-                            <Eye className="mr-2 h-4 w-4" /> Ko'rish
+            <div className="flex items-center justify-end">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground">
+                            <EllipsisVertical className="size-4" />
+                            <span className="sr-only">Amallar</span>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-[180px] rounded-xl shadow-lg border-border/50">
+                        <Link href={`/stadiums/${data.id}`}>
+                            <DropdownMenuItem className="cursor-pointer py-2.5">
+                                <Eye className="mr-2 size-4 text-muted-foreground" />
+                                Ko'rish
+                            </DropdownMenuItem>
+                        </Link>
+                        <Link href={`/stadiums/${data.id}/edit`}>
+                            <DropdownMenuItem className="cursor-pointer py-2.5">
+                                <Pencil className="mr-2 size-4 text-muted-foreground" />
+                                Tahrirlash
+                            </DropdownMenuItem>
+                        </Link>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                            onClick={() => setOpen(true)}
+                            className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 py-2.5"
+                        >
+                            <Trash2 className="mr-2 size-4" />
+                            O'chirish
                         </DropdownMenuItem>
-                    </Link>
-                    <Link href={`/stadiums/${data.id}/edit`}>
-                        <DropdownMenuItem>
-                            <Pencil className="mr-2 h-4 w-4" /> Tahrirlash
-                        </DropdownMenuItem>
-                    </Link>
-                    <DropdownMenuItem onClick={() => setOpen(true)} className="text-red-600 focus:text-red-600">
-                        <Trash className="mr-2 h-4 w-4" /> O'chirish
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
 
             <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent>
+                <DialogContent className="rounded-2xl sm:max-w-[425px]">
                     <DialogHeader>
-                        <DialogTitle>Stadionni o'chirish</DialogTitle>
-                        <DialogDescription>
-                            Siz haqiqatdan ham <b>"{data.name_uz}"</b> stadionini o'chirmoqchimisiz?
+                        <DialogTitle className="flex items-center gap-2 text-destructive">
+                            <Trash2 className="size-5" />
+                            Stadionni o'chirish
+                        </DialogTitle>
+                        <DialogDescription className="py-2">
+                            Siz haqiqatdan ham <span className="font-bold text-foreground">"{data.name_uz}"</span> stadionini o'chirmoqchimisiz?
                             <br />
                             Bu amalni ortga qaytarib bo'lmaydi.
                         </DialogDescription>
                     </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>
+                    <DialogFooter className="gap-2 sm:gap-0 bg-muted/30 p-4 -mx-6 -mb-6 mt-4">
+                        <Button variant="outline" onClick={() => setOpen(false)} disabled={loading} className="rounded-xl">
                             Bekor qilish
                         </Button>
-                        <Button variant="destructive" onClick={onDelete} disabled={loading}>
+                        <Button variant="destructive" onClick={onDelete} disabled={loading} className="rounded-xl px-6">
                             {loading ? "O'chirilmoqda..." : "O'chirish"}
                         </Button>
                     </DialogFooter>

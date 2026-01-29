@@ -44,14 +44,29 @@ const userFormSchema = z.object({
 
 type UserFormValues = z.infer<typeof userFormSchema>
 
-interface UserFormDialogProps {
-  onAddUser: (user: UserFormValues) => void
+interface User {
+  id: number
+  name: string
+  phone: string
+  stadium_ids: number[]
+  is_active: boolean
+  created_at: string
+  updated_at: string
 }
 
-export function UserFormDialog({ onAddUser }: UserFormDialogProps) {
+interface UserFormDialogProps {
+  onAddUser?: (user: UserFormValues) => void
+  onEditUser?: (user: User) => void
+  user?: User
+  trigger?: React.ReactNode
+}
+
+export function UserFormDialog({ onAddUser, onEditUser, user, trigger }: UserFormDialogProps) {
   const [open, setOpen] = useState(false)
   const [stadiums, setStadiums] = useState<Stadium[]>([])
   const [searchQuery, setSearchQuery] = useState("")
+
+  const isEditing = !!user
 
   useEffect(() => {
     if (open) {
@@ -62,15 +77,35 @@ export function UserFormDialog({ onAddUser }: UserFormDialogProps) {
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userFormSchema),
     defaultValues: {
-      name: "",
-      phone: "",
-      stadium_ids: [],
-      is_active: true,
+      name: user?.name || "",
+      phone: user?.phone || "",
+      stadium_ids: user?.stadium_ids || [],
+      is_active: user?.is_active ?? true,
     },
   })
 
+  // Reset form when user changes or dialog opens
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        name: user?.name || "",
+        phone: user?.phone || "",
+        stadium_ids: user?.stadium_ids || [],
+        is_active: user?.is_active ?? true,
+      })
+    }
+  }, [open, user, form])
+
   function onSubmit(data: UserFormValues) {
-    onAddUser(data)
+    if (isEditing && user && onEditUser) {
+      onEditUser({
+        ...user,
+        ...data,
+        updated_at: new Date().toISOString(),
+      })
+    } else if (onAddUser) {
+      onAddUser(data)
+    }
     form.reset()
     setOpen(false)
   }
@@ -83,16 +118,20 @@ export function UserFormDialog({ onAddUser }: UserFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="cursor-pointer">
-          <Plus className="mr-2 h-4 w-4" />
-          Yangi manager
-        </Button>
+        {trigger || (
+          <Button className="cursor-pointer">
+            <Plus className="mr-2 h-4 w-4" />
+            Yangi manager
+          </Button>
+        )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden text-foreground">
         <DialogHeader className="p-6 pb-2">
-          <DialogTitle>Yangi manager qo'shish</DialogTitle>
+          <DialogTitle>{isEditing ? "Managerni tahrirlash" : "Yangi manager qo'shish"}</DialogTitle>
           <DialogDescription>
-            Tizimga yangi manager qo'shing. Barcha maydonlarni to'ldiring.
+            {isEditing
+              ? "Manager ma'lumotlarini o'zgartiring. Barcha maydonlarni tekshiring."
+              : "Tizimga yangi manager qo'shing. Barcha maydonlarni to'ldiring."}
           </DialogDescription>
         </DialogHeader>
 

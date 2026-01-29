@@ -31,29 +31,35 @@ export default function StadiumsPage() {
     }, [])
 
     return (
-        <div className="flex flex-col gap-6 px-4 lg:px-6">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold tracking-tight">Stadionlar</h1>
-                <Button asChild>
+        <div className="flex flex-col gap-8 py-6">
+            <div className="flex items-center justify-between px-4 lg:px-6">
+                <div>
+                    <h1 className="text-3xl font-black tracking-tight text-foreground">Stadionlar</h1>
+                    <p className="text-muted-foreground text-sm mt-1">Barcha stadionlarni boshqarish va monitoring qilish</p>
+                </div>
+                <Button asChild className="rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-95 px-6">
                     <Link href="/stadiums/new">
-                        <Plus className="mr-2 h-4 w-4" /> Yangi stadion
+                        <Plus className="mr-2 h-5 w-5 stroke-[2.5]" /> Yangi stadion
                     </Link>
                 </Button>
             </div>
 
-            {loading ? (
-                <div className="flex h-40 items-center justify-center">
-                    Yuklanmoqda...
-                </div>
-            ) : error ? (
-                <div className="text-red-500">Xatolik: {error}</div>
-            ) : (
-                <DataTable
-                    columns={columns}
-                    data={data}
-                    onRowClick={(row) => router.push(`/stadiums/${row.id}`)}
-                />
-            )}
+            <div className="px-4 lg:px-6">
+
+                {loading ? (
+                    <div className="flex h-40 items-center justify-center">
+                        Yuklanmoqda...
+                    </div>
+                ) : error ? (
+                    <div className="text-red-500">Xatolik: {error}</div>
+                ) : (
+                    <DataTable
+                        columns={columns}
+                        data={data}
+                        onRowClick={(row) => router.push(`/stadiums/${row.id}`)}
+                    />
+                )}
+            </div>
         </div>
     )
 }
