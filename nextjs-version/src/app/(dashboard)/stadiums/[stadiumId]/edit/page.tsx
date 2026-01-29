@@ -36,18 +36,13 @@ export default function EditStadiumPage() {
 
     const onSubmit = async (data: StadiumFormValues) => {
         setLoading(true)
-        try {
-            if (!params.stadiumId) return;
-            // Ensure ID is passed as number if needed, service seems to handle it
-            await stadiumsService.update(Number(params.stadiumId), data)
-            toast.success("Stadion muvaffaqiyatli yangilandi")
-            router.push("/stadiums")
-        } catch (error: any) {
-            console.error(error)
-            toast.error(error.message || "Xatolik yuz berdi")
-        } finally {
-            setLoading(false)
-        }
+        if (!params.stadiumId) return;
+        // No catch block here because we want the error to propagate back to 
+        // StadiumForm so it can set field-specific errors.
+        await stadiumsService.update(Number(params.stadiumId), data)
+        toast.success("Stadion muvaffaqiyatli yangilandi")
+        router.push("/stadiums")
+        setLoading(false)
     }
 
     if (pageLoading) {

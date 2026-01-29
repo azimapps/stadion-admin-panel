@@ -16,16 +16,12 @@ export default function CreateStadiumPage() {
 
     const onSubmit = async (data: StadiumFormValues) => {
         setLoading(true)
-        try {
-            await stadiumsService.create(data)
-            toast.success("Stadion muvaffaqiyatli yaratildi")
-            router.push("/stadiums")
-        } catch (error: any) {
-            console.error(error)
-            toast.error(error.message || "Xatolik yuz berdi")
-        } finally {
-            setLoading(false)
-        }
+        // No catch block here because we want the error to propagate back to 
+        // StadiumForm so it can set field-specific errors (like slug conflicts).
+        await stadiumsService.create(data)
+        toast.success("Stadion muvaffaqiyatli yaratildi")
+        router.push("/stadiums")
+        setLoading(false)
     }
 
     return (

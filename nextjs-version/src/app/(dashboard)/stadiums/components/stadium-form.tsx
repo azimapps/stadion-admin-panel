@@ -60,17 +60,27 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
     const [showPreviewDialog, setShowPreviewDialog] = useState(false)
     const [previewImage, setPreviewImage] = useState<string | null>(null)
 
-    const defaultValues: Partial<StadiumFormValues> = {
-        ...initialData,
+    const defaultValues: StadiumFormValues = {
+        name_uz: initialData?.name_uz || "",
+        name_ru: initialData?.name_ru || "",
+        slug: initialData?.slug || "",
+        description_uz: initialData?.description_uz || "",
+        description_ru: initialData?.description_ru || "",
+        address_uz: initialData?.address_uz || "",
+        address_ru: initialData?.address_ru || "",
+        latitude: initialData?.latitude || 0,
+        longitude: initialData?.longitude || 0,
         is_active: initialData?.is_active ?? true,
         is_metro_near: initialData?.is_metro_near ?? false,
         metro_station: initialData?.metro_station || "",
         metro_distance: initialData?.metro_distance || 0,
-        phones: initialData?.phone ? initialData.phone.map((p: string) => ({ value: p })) : [{ value: "" }],
+        phones: initialData?.phone ? initialData.phone.map((p: string) => ({ value: p })) : (initialData?.phones || [{ value: "" }]),
         capacity: initialData?.capacity || "7x7",
         price_per_hour: initialData?.price_per_hour || 200000,
         surface_type: initialData?.surface_type || "artificial",
         roof_type: initialData?.roof_type || "open",
+        main_image: initialData?.main_image || "",
+        images: initialData?.images || [],
     }
 
     const form = useForm<StadiumFormValues>({
@@ -111,18 +121,11 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
             if (filesToUpload.length > 0) {
                 const result = await uploadService.uploadStadiumImages(filesToUpload);
 
-                // Map uploaded files back to their blobs via filename/order or assume sequential handling?
-                // `uploadService` preserves order.
-                // We need to match which file corresponds to which URL.
-                // Let's iterate filesToUpload and result.uploaded together.
-
                 if (result.uploaded.length !== filesToUpload.length) {
                     throw new Error("Mismatch in uploaded file count");
                 }
 
                 filesToUpload.forEach((file, index) => {
-                    // We need to find the blob URL that corresponds to this file
-                    // Inverse lookup in fileMap is slow, but we can iterate the map.
                     for (const [blob, f] of fileMap.current.entries()) {
                         if (f === file) {
                             blobToUrlMap.set(blob, result.uploaded[index].url);
@@ -146,13 +149,11 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
             });
 
             // Transform phones array of objects back to string array for API
-            // Sanitize optional fields: convert empty strings to null/undefined
             const submissionData = {
                 ...values,
                 main_image: finalMainImage,
                 images: finalImages,
                 phone: values.phones?.map(p => p.value) || [],
-                // backend invalid input fix
                 metro_station: values.is_metro_near && values.metro_station ? values.metro_station : null,
                 metro_distance: values.is_metro_near && values.metro_distance ? values.metro_distance : 0,
                 surface_type: values.surface_type || null,
@@ -162,9 +163,25 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
             delete (submissionData as any).phones;
 
             await onSubmit(submissionData as any);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Submission error:", error);
-            alert("Ma'lumotlarni saqlashda xatolik yuz berdi");
+
+            // If it's a slug conflict error, show it under the slug field
+            const errorMsg = error.message || "";
+            if (errorMsg.toLowerCase().includes("slug") && errorMsg.toLowerCase().includes("exists")) {
+                form.setError("slug", {
+                    type: "manual",
+                    message: "Ushbu slug band. Iltimos, boshqa nom tanlang yoki slugni o'zgartiring."
+                });
+                // Switch to info tab where slug is located
+                setCurrentTab("info");
+                toast.error("Stadion slug manzili band!");
+            } else {
+                // Otherwise show generic toast (parent usually does this, but we help if it doesn't)
+                toast.error(error.message || "Ma'lumotlarni saqlashda xatolik yuz berdi");
+            }
+            // Re-throw if the parent expects to handle it too (like for loading states)
+            throw error;
         } finally {
             setUploading(false);
         }
