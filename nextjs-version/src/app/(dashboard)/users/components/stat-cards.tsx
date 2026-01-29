@@ -1,34 +1,44 @@
 import { Card, CardContent } from "@/components/ui/card"
-import { Users, CreditCard, UserCheck, Clock5, TrendingUp, TrendingDown, ArrowUpRight } from "lucide-react"
+import { Users, UserCheck, Clock5, TrendingUp, TrendingDown, ArrowUpRight } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from '@/lib/utils'
+import { Manager } from "@/services/manager"
 
+interface StatCardsProps {
+  users: Manager[]
+}
 
-const performanceMetrics = [
-  {
-    title: 'Jami managerlar',
-    current: '24',
-    previous: '18',
-    growth: 33.3,
-    icon: Users,
-  },
-  {
-    title: 'Faol managerlar',
-    current: '21',
-    previous: '15',
-    growth: 40.0,
-    icon: UserCheck,
-  },
-  {
-    title: 'Nofaol managerlar',
-    current: '3',
-    previous: '3',
-    growth: 0,
-    icon: Clock5,
-  },
-]
+export function StatCards({ users }: StatCardsProps) {
+  const totalManagers = users.length
+  const activeManagers = users.filter(u => u.is_active).length
+  const inactiveManagers = users.filter(u => !u.is_active).length
 
-export function StatCards() {
+  // Since we don't have previous history in this view, 
+  // we'll just show current ones or zero growth for now.
+  const performanceMetrics = [
+    {
+      title: 'Jami managerlar',
+      current: totalManagers.toString(),
+      previous: '0',
+      growth: 100,
+      icon: Users,
+    },
+    {
+      title: 'Faol managerlar',
+      current: activeManagers.toString(),
+      previous: '0',
+      growth: 100,
+      icon: UserCheck,
+    },
+    {
+      title: 'Nofaol managerlar',
+      current: inactiveManagers.toString(),
+      previous: '0',
+      growth: 0,
+      icon: Clock5,
+    },
+  ]
+
   return (
     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {performanceMetrics.map((metric, index) => (

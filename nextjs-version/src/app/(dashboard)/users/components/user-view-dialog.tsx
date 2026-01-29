@@ -14,18 +14,10 @@ import { Badge } from "@/components/ui/badge"
 import { Stadium, stadiumsService } from "@/services/stadium"
 import { Calendar, Phone, User as UserIcon, MapPin, Activity } from "lucide-react"
 
-interface User {
-    id: number
-    name: string
-    phone: string
-    stadium_ids: number[]
-    is_active: boolean
-    created_at: string
-    updated_at: string
-}
+import { Manager } from "@/services/manager"
 
 interface UserViewDialogProps {
-    user: User
+    user: Manager
     trigger?: React.ReactNode
 }
 

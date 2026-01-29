@@ -42,22 +42,14 @@ const userFormSchema = z.object({
   is_active: z.boolean(),
 })
 
+import { Manager, ManagerFormValues, managersService } from "@/services/manager"
+
 type UserFormValues = z.infer<typeof userFormSchema>
 
-interface User {
-  id: number
-  name: string
-  phone: string
-  stadium_ids: number[]
-  is_active: boolean
-  created_at: string
-  updated_at: string
-}
-
 interface UserFormDialogProps {
-  onAddUser?: (user: UserFormValues) => void
-  onEditUser?: (user: User) => void
-  user?: User
+  onAddUser?: (user: ManagerFormValues) => void
+  onEditUser?: (user: Manager) => void
+  user?: Manager
   trigger?: React.ReactNode
 }
 

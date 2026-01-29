@@ -1,58 +1,89 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { StatCards } from "./components/stat-cards"
 import { DataTable } from "./components/data-table"
-
-import initialUsersData from "./data.json"
-
-interface User {
-  id: number
-  name: string
-  phone: string
-  stadium_ids: number[]
-  is_active: boolean
-  created_at: string
-  updated_at: string
-}
-
-interface UserFormValues {
-  name: string
-  phone: string
-  stadium_ids: number[]
-  is_active: boolean
-}
+import { managersService, Manager, ManagerFormValues } from "@/services/manager"
+import { toast } from "sonner"
+import { Loader2 } from "lucide-react"
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>(initialUsersData)
+  const [users, setUsers] = useState<Manager[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const handleAddUser = (userData: UserFormValues) => {
-    const newUser: User = {
-      id: Math.max(...users.map(u => u.id)) + 1,
-      name: userData.name,
-      phone: userData.phone,
-      stadium_ids: userData.stadium_ids,
-      is_active: userData.is_active,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+  const fetchUsers = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      console.log("Fetching users from backend...")
+      const data = await managersService.getAll()
+      console.log("Users fetched successfully:", data)
+      setUsers(data)
+    } catch (error) {
+      console.error("Failed to fetch users:", error)
+      toast.error("Foydalanuvchilarni yuklashda xatolik yuz berdi")
+    } finally {
+      setIsLoading(false)
     }
-    setUsers(prev => [newUser, ...prev])
+  }, [])
+
+  useEffect(() => {
+    fetchUsers()
+  }, [fetchUsers])
+
+  const handleAddUser = async (userData: ManagerFormValues) => {
+    try {
+      console.log("Adding user to backend:", userData)
+      const newUser = await managersService.create(userData)
+      console.log("User added successfully:", newUser)
+      setUsers(prev => [newUser, ...prev])
+      toast.success("Foydalanuvchi muvaffaqiyatli qo'shildi")
+    } catch (error) {
+      console.error("Failed to add user:", error)
+      toast.error("Foydalanuvchi qo'shishda xatolik yuz berdi")
+    }
   }
 
-  const handleDeleteUser = (id: number) => {
-    setUsers(prev => prev.filter(user => user.id !== id))
+  const handleDeleteUser = async (id: number) => {
+    try {
+      console.log(`Deleting user with ID ${id} from backend...`)
+      await managersService.delete(id)
+      console.log("User deleted successfully")
+      setUsers(prev => prev.filter(user => user.id !== id))
+      toast.success("Foydalanuvchi muvaffaqiyatli o'chirildi")
+    } catch (error) {
+      console.error("Failed to delete user:", error)
+      toast.error("Foydalanuvchini o'chirishda xatolik yuz berdi")
+    }
   }
 
-  const handleEditUser = (updatedUser: User) => {
-    setUsers(prev => prev.map(user =>
-      user.id === updatedUser.id ? { ...updatedUser, updated_at: new Date().toISOString() } : user
-    ))
+  const handleEditUser = async (updatedUser: Manager) => {
+    try {
+      const { id, ...data } = updatedUser
+      console.log(`Updating user with ID ${id} on backend:`, data)
+      const result = await managersService.update(id, data)
+      console.log("User updated successfully:", result)
+      setUsers(prev => prev.map(user =>
+        user.id === id ? result : user
+      ))
+      toast.success("Foydalanuvchi ma'lumotlari yangilandi")
+    } catch (error) {
+      console.error("Failed to update user:", error)
+      toast.error("Foydalanuvchini yangilashda xatolik yuz berdi")
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
   }
 
   return (
     <div className="flex flex-col gap-4">
       <div className="@container/main px-4 lg:px-6">
-        <StatCards />
+        <StatCards users={users} />
       </div>
 
       <div className="@container/main px-4 lg:px-6 mt-8 lg:mt-12">

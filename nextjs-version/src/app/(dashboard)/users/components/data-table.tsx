@@ -56,28 +56,13 @@ import {
 import { UserFormDialog } from "./user-form-dialog"
 import { UserViewDialog } from "./user-view-dialog"
 
-interface User {
-  id: number
-  name: string
-  phone: string
-  stadium_ids: number[]
-  is_active: boolean
-  created_at: string
-  updated_at: string
-}
-
-interface UserFormValues {
-  name: string
-  phone: string
-  stadium_ids: number[]
-  is_active: boolean
-}
+import { Manager, ManagerFormValues } from "@/services/manager"
 
 interface DataTableProps {
-  users: User[]
+  users: Manager[]
   onDeleteUser: (id: number) => void
-  onEditUser: (user: User) => void
-  onAddUser: (userData: UserFormValues) => void
+  onEditUser: (user: Manager) => void
+  onAddUser: (userData: ManagerFormValues) => void
 }
 
 export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTableProps) {
@@ -93,11 +78,11 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
       : "text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-900/20"
   }
 
-  const exactFilter = (row: Row<User>, columnId: string, value: string) => {
+  const exactFilter = (row: Row<Manager>, columnId: string, value: string) => {
     return row.getValue(columnId) === value
   }
 
-  const columns: ColumnDef<User>[] = [
+  const columns: ColumnDef<Manager>[] = [
     {
       id: "select",
       header: ({ table }) => (
@@ -151,7 +136,7 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
       accessorKey: "stadium_ids",
       header: "Stadionlar",
       cell: ({ row }) => {
-        const ids = row.getValue("stadium_ids") as number[]
+        const ids = (row.getValue("stadium_ids") as number[]) || []
         return <span className="text-sm font-medium bg-muted px-2 py-0.5 rounded-full text-xs">{ids.length} ta stadion</span>
       },
     },
