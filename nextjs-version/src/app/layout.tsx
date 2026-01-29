@@ -8,6 +8,12 @@ import { inter } from "@/lib/fonts";
 export const metadata: Metadata = {
   title: "Stadion24 Admin Panel",
   description: "Stadion24 admin dashboard",
+  icons: {
+    icon: [
+      { url: "/favicon.png", media: "(prefers-color-scheme: light)" },
+      { url: "/favicon-dark.png", media: "(prefers-color-scheme: dark)" },
+    ],
+  },
 };
 
 export default function RootLayout({

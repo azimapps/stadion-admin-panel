@@ -22,6 +22,7 @@ import { Logo } from "@/components/logo"
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
+import { SidebarNotification } from "@/components/sidebar-notification"
 import {
   Sidebar,
   SidebarContent,
@@ -68,14 +69,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
+            <SidebarMenuButton size="lg" asChild className="h-14 hover:bg-transparent">
               <Link href="/dashboard">
-                <div className="flex aspect-square size-10 items-center justify-center overflow-hidden rounded-xl">
-                  <Logo size={40} className="object-cover" />
+                <div className="flex size-14 items-center justify-center bg-transparent transition-all duration-300 hover:scale-110">
+                  <Logo size={56} className="object-contain" />
                 </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">Stadion</span>
-                  <span className="truncate text-xs">Admin Dashboard</span>
+                <div className="ml-2 flex flex-1 flex-col justify-center leading-none">
+                  <span className="text-2xl font-black italic tracking-tighter text-foreground">STADION</span>
+                  <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">Admin Panel</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -88,6 +89,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         ))}
       </SidebarContent>
       <SidebarFooter>
+        <SidebarNotification />
         <NavUser user={data.user} />
       </SidebarFooter>
     </Sidebar>
