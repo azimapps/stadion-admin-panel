@@ -46,6 +46,11 @@ function ChartContainer({
 }) {
   const uniqueId = React.useId()
   const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
 
   return (
     <ChartContext.Provider value={{ config }}>
@@ -59,9 +64,15 @@ function ChartContainer({
         {...props}
       >
         <ChartStyle id={chartId} config={config} />
-        <RechartsPrimitive.ResponsiveContainer minHeight={0} minWidth={0}>
-          {children}
-        </RechartsPrimitive.ResponsiveContainer>
+        {mounted ? (
+          <RechartsPrimitive.ResponsiveContainer minHeight={0} minWidth={0}>
+            {children}
+          </RechartsPrimitive.ResponsiveContainer>
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-muted-foreground/20">
+            Yuklanmoqda...
+          </div>
+        )}
       </div>
     </ChartContext.Provider>
   )

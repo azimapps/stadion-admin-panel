@@ -56,7 +56,6 @@ export default function StadiumsPage() {
                     <DataTable
                         columns={columns}
                         data={data}
-                        onRowClick={(row) => router.push(`/stadiums/${row.id}`)}
                     />
                 )}
             </div>

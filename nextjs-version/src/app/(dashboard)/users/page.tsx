@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { StatCards } from "./components/stat-cards"
+
 import { DataTable } from "./components/data-table"
 import { managersService, Manager, ManagerFormValues } from "@/services/manager"
 import { toast } from "sonner"
@@ -38,8 +38,7 @@ export default function UsersPage() {
       setUsers(prev => [newUser, ...prev])
       toast.success("Foydalanuvchi muvaffaqiyatli qo'shildi")
     } catch (error) {
-      console.error("Failed to add user:", error)
-      toast.error("Foydalanuvchi qo'shishda xatolik yuz berdi")
+      throw error
     }
   }
 
@@ -53,22 +52,37 @@ export default function UsersPage() {
     } catch (error) {
       console.error("Failed to delete user:", error)
       toast.error("Foydalanuvchini o'chirishda xatolik yuz berdi")
+      throw error
     }
   }
 
   const handleEditUser = async (updatedUser: Manager) => {
     try {
-      const { id, ...data } = updatedUser
-      console.log(`Updating user with ID ${id} on backend:`, data)
-      const result = await managersService.update(id, data)
-      console.log("User updated successfully:", result)
-      setUsers(prev => prev.map(user =>
-        user.id === id ? result : user
-      ))
+      const { id, stadium_ids: newStadiums = [], ...rest } = updatedUser
+      const originalUser = users.find(u => u.id === id);
+
+      // 1. Update basic info (PUT doesn't support stadium_ids)
+      const result = await managersService.update(id, rest)
+
+      // 2. Sync stadiums if changed
+      if (originalUser) {
+        const originalStadiums = originalUser.stadium_ids || [];
+
+        const added = newStadiums.filter(sId => !originalStadiums.includes(sId));
+        const removed = originalStadiums.filter(sId => !newStadiums.includes(sId));
+
+        // Execute updates
+        await Promise.all([
+          ...added.map(sId => managersService.addStadiumAccess(id, sId)),
+          ...removed.map(sId => managersService.removeStadiumAccess(id, sId))
+        ]);
+      }
+
+      await fetchUsers()
       toast.success("Foydalanuvchi ma'lumotlari yangilandi")
     } catch (error) {
       console.error("Failed to update user:", error)
-      toast.error("Foydalanuvchini yangilashda xatolik yuz berdi")
+      throw error // Re-throw so dialog can handle loading state
     }
   }
 
@@ -83,10 +97,6 @@ export default function UsersPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="@container/main px-4 lg:px-6">
-        <StatCards users={users} />
-      </div>
-
-      <div className="@container/main px-4 lg:px-6 mt-8 lg:mt-12">
         <DataTable
           users={users}
           onDeleteUser={handleDeleteUser}

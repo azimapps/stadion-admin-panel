@@ -55,14 +55,15 @@ import {
 } from "@/components/ui/table"
 import { UserFormDialog } from "./user-form-dialog"
 import { UserViewDialog } from "./user-view-dialog"
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog"
 
 import { Manager, ManagerFormValues } from "@/services/manager"
 
 interface DataTableProps {
   users: Manager[]
-  onDeleteUser: (id: number) => void
-  onEditUser: (user: Manager) => void
-  onAddUser: (userData: ManagerFormValues) => void
+  onDeleteUser: (id: number) => Promise<void>
+  onEditUser: (user: Manager) => Promise<void>
+  onAddUser: (userData: ManagerFormValues) => Promise<void>
 }
 
 export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTableProps) {
@@ -71,6 +72,23 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = useState({})
   const [globalFilter, setGlobalFilter] = useState("")
+
+  // States for dialogs
+  const [viewUser, setViewUser] = useState<Manager | null>(null)
+  const [editUser, setEditUser] = useState<Manager | null>(null)
+  const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const handleDeleteConfirm = async () => {
+    if (deleteId === null) return
+    setIsDeleting(true)
+    try {
+      await onDeleteUser(deleteId)
+      setDeleteId(null)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   const getStatusColor = (active: boolean) => {
     return active
@@ -166,7 +184,7 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
       cell: ({ row }) => {
         const user = row.original
         return (
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground">
@@ -175,29 +193,24 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-[180px] rounded-xl shadow-lg border-border/50">
-                <UserViewDialog
-                  user={user}
-                  trigger={
-                    <DropdownMenuItem className="cursor-pointer py-2.5" onSelect={(e) => e.preventDefault()}>
-                      <Eye className="mr-2 size-4 text-muted-foreground" />
-                      Batafsil ko'rish
-                    </DropdownMenuItem>
-                  }
-                />
-                <UserFormDialog
-                  user={user}
-                  onEditUser={onEditUser}
-                  trigger={
-                    <DropdownMenuItem className="cursor-pointer py-2.5" onSelect={(e) => e.preventDefault()}>
-                      <Pencil className="mr-2 size-4 text-muted-foreground" />
-                      Tahrirlash
-                    </DropdownMenuItem>
-                  }
-                />
+                <DropdownMenuItem
+                  className="cursor-pointer py-2.5"
+                  onSelect={() => setViewUser(user)}
+                >
+                  <Eye className="mr-2 size-4 text-muted-foreground" />
+                  Batafsil ko'rish
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer py-2.5"
+                  onSelect={() => setEditUser(user)}
+                >
+                  <Pencil className="mr-2 size-4 text-muted-foreground" />
+                  Tahrirlash
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 py-2.5"
-                  onClick={() => onDeleteUser(user.id)}
+                  onSelect={() => setDeleteId(user.id)}
                 >
                   <Trash2 className="mr-2 size-4" />
                   O'chirish
@@ -235,40 +248,8 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
 
   return (
     <div className="w-full space-y-6">
-      {/* Search and Main Actions */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-card/50 p-4 rounded-2xl border border-border/50 backdrop-blur-sm shadow-sm transition-all hover:shadow-md">
-        <div className="flex flex-1 items-center gap-3">
-          <div className="relative flex-1 max-w-sm group">
-            <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
-            <Input
-              placeholder="Managerlarni qidirish..."
-              value={globalFilter ?? ""}
-              onChange={(event) => setGlobalFilter(String(event.target.value))}
-              className="pl-10 h-11 bg-background/50 border-border/50 rounded-xl focus-visible:ring-primary/20 transition-all"
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Select
-              onValueChange={(value) =>
-                table.getColumn("is_active")?.setFilterValue(value === "all" ? "" : value === "active")
-              }
-            >
-              <SelectTrigger className="h-11 w-[140px] rounded-xl bg-background/50 border-border/50 cursor-pointer hover:bg-muted/50 transition-colors">
-                <div className="flex items-center gap-2">
-                  <Activity className="size-4 text-muted-foreground" />
-                  <SelectValue placeholder="Holat" />
-                </div>
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                <SelectItem value="all">Barchasi</SelectItem>
-                <SelectItem value="active">Faol</SelectItem>
-                <SelectItem value="inactive">Nofaol</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
+      {/* Main Actions */}
+      <div className="flex items-center justify-end bg-card/50 p-4 rounded-2xl border border-border/50 backdrop-blur-sm shadow-sm transition-all hover:shadow-md">
         <div className="flex items-center">
           <UserFormDialog onAddUser={onAddUser} />
         </div>
@@ -392,6 +373,32 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
           </div>
         </div>
       </div>
+      {/* Global Dialogs */}
+      {viewUser && (
+        <UserViewDialog
+          user={viewUser}
+          open={!!viewUser}
+          onOpenChange={(open) => !open && setViewUser(null)}
+        />
+      )}
+
+      {editUser && (
+        <UserFormDialog
+          user={editUser}
+          open={!!editUser}
+          onOpenChange={(open) => !open && setEditUser(null)}
+          onEditUser={onEditUser}
+        />
+      )}
+
+      <ConfirmDeleteDialog
+        open={deleteId !== null}
+        onOpenChange={() => setDeleteId(null)}
+        onConfirm={handleDeleteConfirm}
+        loading={isDeleting}
+        title="Manager tizimdan o'chirilsinmi?"
+        description={`Uni barcha ruxsatnomalari va ma'lumotlari bilan o'chirmoqchimisiz?`}
+      />
     </div>
   )
 }

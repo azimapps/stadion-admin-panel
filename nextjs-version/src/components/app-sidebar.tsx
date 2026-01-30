@@ -16,6 +16,7 @@ import {
   LayoutTemplate,
   Users,
   MapPin,
+  Video,
 } from "lucide-react"
 import Link from "next/link"
 import { Logo } from "@/components/logo"
@@ -57,6 +58,11 @@ const data = {
           title: "Managerlar",
           url: "/users",
           icon: Users,
+        },
+        {
+          title: "Media",
+          url: "/media",
+          icon: Video,
         },
       ],
     },
