@@ -55,6 +55,7 @@ interface MediaFormDialogProps {
     onAddMedia?: (data: MediaFormValues) => Promise<void>
     onEditMedia?: (id: number, data: MediaFormValues) => Promise<void>
     onDeleteMedia?: (id: number) => Promise<void>
+    trigger?: React.ReactNode
 }
 
 export function MediaFormDialog({
@@ -62,6 +63,7 @@ export function MediaFormDialog({
     onAddMedia,
     onEditMedia,
     onDeleteMedia,
+    trigger,
 }: MediaFormDialogProps) {
     const isEditing = !!media
     const [open, setOpen] = useState(false)
@@ -110,7 +112,9 @@ export function MediaFormDialog({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                {isEditing ? (
+                {trigger ? (
+                    trigger
+                ) : isEditing ? (
                     <Button
                         variant="ghost"
                         size="icon"
