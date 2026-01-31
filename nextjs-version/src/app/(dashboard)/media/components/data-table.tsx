@@ -20,12 +20,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-
-import {
-    Search,
-} from "lucide-react"
-
-import { Input } from "@/components/ui/input"
+import { Search } from "lucide-react"
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
@@ -39,7 +34,6 @@ export function DataTable<TData, TValue>({
     onRowClick,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([])
-    const [globalFilter, setGlobalFilter] = React.useState("")
     const [columnVisibility, setColumnVisibility] = React.useState({})
 
     const table = useReactTable({
@@ -52,29 +46,12 @@ export function DataTable<TData, TValue>({
         onColumnVisibilityChange: setColumnVisibility,
         state: {
             sorting,
-            globalFilter,
             columnVisibility,
         },
-        onGlobalFilterChange: setGlobalFilter,
     })
 
     return (
         <div className="w-full space-y-6">
-            {/* Toolbar */}
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-card/50 p-4 rounded-2xl border border-border/50 backdrop-blur-sm shadow-sm transition-all hover:shadow-md">
-                <div className="flex flex-1 items-center gap-3">
-                    <div className="relative flex-1 max-w-sm group">
-                        <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                        <Input
-                            placeholder="Media kontentlarni qidirish..."
-                            value={globalFilter ?? ""}
-                            onChange={(event) => setGlobalFilter(String(event.target.value))}
-                            className="pl-10 h-11 bg-background/50 border-border/50 rounded-xl focus-visible:ring-primary/20 transition-all"
-                        />
-                    </div>
-                </div>
-            </div>
-
             {/* Table Container */}
             <div className="rounded-2xl border border-border/50 bg-card/30 backdrop-blur-sm shadow-sm overflow-hidden transition-all hover:shadow-md">
                 <Table>

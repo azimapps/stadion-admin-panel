@@ -28,6 +28,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Media } from "@/services/media"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog"
+import { MarkdownEditor } from "@/components/markdown-editor"
 
 const mediaFormSchema = z.object({
     title_uz: z.string().min(2, {
@@ -131,11 +132,11 @@ export function MediaFormDialog({ onAddMedia, onEditMedia, onDeleteMedia, media,
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col p-0 overflow-hidden text-foreground">
+            <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden text-foreground">
                 <DialogHeader className="p-6 pb-2">
                     <div className="flex items-center justify-between">
                         <div>
-                            <DialogTitle>{isEditing ? "Media kontentni tahrirlash" : "Yangi media qo'shish"}</DialogTitle>
+                            <DialogTitle className="text-2xl font-bold tracking-tight">{isEditing ? "Media tahrirlash" : "Yangi media qo'shish"}</DialogTitle>
                             <DialogDescription>
                                 {isEditing
                                     ? "Media ma'lumotlarini o'zgartiring. Barcha maydonlarni tekshiring."
@@ -177,7 +178,7 @@ export function MediaFormDialog({ onAddMedia, onEditMedia, onDeleteMedia, media,
                                     <FormControl>
                                         <div className="relative">
                                             <Video className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                                            <Input placeholder="https://www.youtube.com/watch?v=..." className="pl-10 h-11 bg-background/50" {...field} />
+                                            <Input placeholder="https://www.youtube.com/watch?v=..." className="pl-10 h-11 bg-muted/20" {...field} />
                                         </div>
                                     </FormControl>
                                     <FormMessage />
@@ -199,7 +200,7 @@ export function MediaFormDialog({ onAddMedia, onEditMedia, onDeleteMedia, media,
                                         <FormItem>
                                             <FormLabel>Sarlavha (UZ)</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Video sarlavhasini kiriting" className="h-11 bg-background/50" {...field} />
+                                                <Input placeholder="Video sarlavhasini kiriting" className="h-11 bg-muted/20" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -210,14 +211,12 @@ export function MediaFormDialog({ onAddMedia, onEditMedia, onDeleteMedia, media,
                                     name="content_uz"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Tarkib (UZ) - Markdown qo'llab-quvvatlanadi</FormLabel>
-                                            <FormControl>
-                                                <Textarea
-                                                    placeholder="Video haqida batafsil ma'lumot..."
-                                                    className="min-h-[200px] bg-background/50 resize-none font-mono text-sm shadow-inner"
-                                                    {...field}
-                                                />
-                                            </FormControl>
+                                            <MarkdownEditor
+                                                label="Maqola matni (Markdown)"
+                                                placeholder="Maqola matnini yozish uchun bosing"
+                                                value={field.value}
+                                                onChange={field.onChange}
+                                            />
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -232,7 +231,7 @@ export function MediaFormDialog({ onAddMedia, onEditMedia, onDeleteMedia, media,
                                         <FormItem>
                                             <FormLabel>Заголовок (RU)</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Введите заголовок видео" className="h-11 bg-background/50" {...field} />
+                                                <Input placeholder="Введите заголовок видео" className="h-11 bg-muted/20" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -243,14 +242,12 @@ export function MediaFormDialog({ onAddMedia, onEditMedia, onDeleteMedia, media,
                                     name="content_ru"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Контент (RU) - Поддержка Markdown</FormLabel>
-                                            <FormControl>
-                                                <Textarea
-                                                    placeholder="Подробное описание видео..."
-                                                    className="min-h-[200px] bg-background/50 resize-none font-mono text-sm shadow-inner"
-                                                    {...field}
-                                                />
-                                            </FormControl>
+                                            <MarkdownEditor
+                                                label="Текст статьи (Markdown)"
+                                                placeholder="Нажмите, чтобы написать текст статьи"
+                                                value={field.value}
+                                                onChange={field.onChange}
+                                            />
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -260,7 +257,7 @@ export function MediaFormDialog({ onAddMedia, onEditMedia, onDeleteMedia, media,
                     </form>
                 </Form>
 
-                <DialogFooter className="p-6 pt-2 border-t bg-muted/50">
+                <DialogFooter className="p-6 pt-4 border-t bg-muted/30">
                     <Button
                         type="button"
                         variant="outline"

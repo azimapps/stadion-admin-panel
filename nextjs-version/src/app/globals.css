@@ -1,5 +1,49 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 @import "tw-animate-css";
+
+/* Prose styles for Markdown Preview */
+.prose {
+  --tw-prose-body: var(--foreground);
+  --tw-prose-headings: var(--foreground);
+  --tw-prose-links: var(--primary);
+  --tw-prose-bold: var(--foreground);
+  --tw-prose-counters: var(--muted-foreground);
+  --tw-prose-bullets: var(--muted-foreground);
+  --tw-prose-hr: var(--border);
+  --tw-prose-quotes: var(--foreground);
+  --tw-prose-quote-borders: var(--primary);
+  --tw-prose-captions: var(--muted-foreground);
+  --tw-prose-code: var(--foreground);
+  --tw-prose-pre-code: var(--secondary-foreground);
+  --tw-prose-pre-bg: var(--secondary);
+  --tw-prose-th-borders: var(--border);
+  --tw-prose-td-borders: var(--border);
+}
+
+.prose h1,
+.prose h2,
+.prose h3 {
+  font-weight: 700;
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.prose th,
+.prose td {
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+}
+
+.prose blockquote {
+  border-left: 4px solid var(--primary);
+  padding-left: 1rem;
+  font-style: italic;
+  color: var(--muted-foreground);
+}
 
 @custom-variant dark (&:is(.dark *));
 
@@ -115,6 +159,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
@@ -123,7 +168,8 @@
 }
 
 /* Ensure consistent font rendering across different DPI levels */
-@media (-webkit-min-device-pixel-ratio: 1.5), (min-resolution: 144dpi) {
+@media (-webkit-min-device-pixel-ratio: 1.5),
+(min-resolution: 144dpi) {
   body {
     -webkit-font-smoothing: subpixel-antialiased;
   }
@@ -137,13 +183,14 @@
 
 /* Fix for right-side inset variant support */
 @media (min-width: 768px) {
+
   /* Right sidebar inset variant - margin adjustments */
-  [data-side="right"][data-variant="inset"] ~ [data-slot="sidebar-inset"] {
+  [data-side="right"][data-variant="inset"]~[data-slot="sidebar-inset"] {
     margin-right: 0 !important;
   }
 
   /* Right sidebar inset variant - collapsed state margin */
-  [data-side="right"][data-variant="inset"][data-state="collapsed"] ~ [data-slot="sidebar-inset"] {
+  [data-side="right"][data-variant="inset"][data-state="collapsed"]~[data-slot="sidebar-inset"] {
     margin-right: 0.5rem !important;
   }
 }
@@ -158,8 +205,10 @@ html {
   0% {
     transform: translateX(0);
   }
+
   100% {
-    transform: translateX(-144rem); /* 12 items * 12rem = 144rem */
+    transform: translateX(-144rem);
+    /* 12 items * 12rem = 144rem */
   }
 }
 

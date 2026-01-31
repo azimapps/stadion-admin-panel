@@ -68,16 +68,18 @@ export default function MediaPage() {
         [fetchData, handleEditMedia, handleDeleteMedia])
 
     return (
-        <div className="flex flex-col gap-8 py-6">
-            <div className="flex items-center justify-between px-4 lg:px-6">
+        <div className="flex flex-col gap-6 py-6 px-4 lg:px-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black tracking-tight text-foreground">Media Management</h1>
-                    <p className="text-muted-foreground text-sm mt-1">YouTube videolari va ularning tavsiflarini boshqarish</p>
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground italic">Media Center</h1>
+                    <p className="text-muted-foreground text-sm mt-1">YouTube videolari va maqolalarni boshqarish tizimi</p>
                 </div>
-                <MediaFormDialog onAddMedia={handleAddMedia} />
+                <div className="shrink-0">
+                    <MediaFormDialog onAddMedia={handleAddMedia} />
+                </div>
             </div>
 
-            <div className="px-4 lg:px-6">
+            <div className="relative">
                 {loading ? (
                     <div className="flex h-64 items-center justify-center bg-card/30 rounded-2xl border border-dashed border-border/50 backdrop-blur-sm shadow-inner transition-all">
                         <div className="flex flex-col items-center gap-4">

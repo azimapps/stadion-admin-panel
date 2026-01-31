@@ -13,34 +13,34 @@ export const getColumns = (
 ): ColumnDef<Media>[] => [
         {
             accessorKey: "title_uz",
-            header: "Sarlavha (UZ)",
+            header: "Media va Maqola",
             cell: ({ row }) => {
                 return (
-                    <div className="flex items-center gap-3">
-                        <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <div className="flex items-center gap-3 py-1">
+                        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20">
                             <Video className="size-5" />
                         </div>
-                        <span className="font-semibold text-foreground line-clamp-1">
-                            {row.getValue("title_uz")}
-                        </span>
+                        <div className="flex flex-col min-w-0">
+                            <span className="font-bold text-foreground text-sm line-clamp-1">
+                                {row.getValue("title_uz")}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground truncate">
+                                {row.original.title_ru}
+                            </span>
+                        </div>
                     </div>
                 )
             }
         },
         {
-            accessorKey: "title_ru",
-            header: "Sarlavha (RU)",
-            cell: ({ row }) => <span className="line-clamp-1">{row.getValue("title_ru")}</span>
-        },
-        {
             accessorKey: "created_at",
-            header: "Yaratilgan vaqt",
+            header: "Sana",
             cell: ({ row }) => {
                 const date = new Date(row.getValue("created_at"))
                 return (
                     <div className="flex flex-col">
                         <span className="text-sm font-medium text-foreground">{format(date, "dd.MM.yyyy")}</span>
-                        <span className="text-xs text-muted-foreground">{format(date, "HH:mm")}</span>
+                        <span className="text-[10px] text-muted-foreground">{format(date, "HH:mm")}</span>
                     </div>
                 )
             }
@@ -49,12 +49,14 @@ export const getColumns = (
             id: "actions",
             header: () => <div className="text-right">Amallar</div>,
             cell: ({ row }) => (
-                <CellAction
-                    data={row.original}
-                    onRefresh={onRefresh}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                />
+                <div className="flex justify-end pr-1">
+                    <CellAction
+                        data={row.original}
+                        onRefresh={onRefresh}
+                        onEdit={onEdit}
+                        onDelete={onDelete}
+                    />
+                </div>
             ),
         },
     ]
