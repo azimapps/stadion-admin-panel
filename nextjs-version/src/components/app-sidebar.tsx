@@ -17,6 +17,7 @@ import {
   Users,
   MapPin,
   Video,
+  Trophy,
 } from "lucide-react"
 import Link from "next/link"
 import { Logo } from "@/components/logo"
@@ -63,6 +64,11 @@ const data = {
           title: "Media",
           url: "/media",
           icon: Video,
+        },
+        {
+          title: "Turnirlar",
+          url: "/tournaments",
+          icon: Trophy,
         },
       ],
     },
