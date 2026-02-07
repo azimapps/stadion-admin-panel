@@ -16,8 +16,10 @@ import {
   LayoutTemplate,
   Users,
   MapPin,
+  Map as MapIcon,
   Video,
   Trophy,
+  Wifi,
 } from "lucide-react"
 import Link from "next/link"
 import { Logo } from "@/components/logo"
@@ -69,6 +71,26 @@ const data = {
           title: "Turnirlar",
           url: "/tournaments",
           icon: Trophy,
+        },
+      ],
+    },
+    {
+      label: "Qo'shimchalar",
+      items: [
+        {
+          title: "Qulayliklar",
+          url: "/comforts",
+          icon: Wifi,
+        },
+        {
+          title: "Jamoalar",
+          url: "/teams",
+          icon: Shield,
+        },
+        {
+          title: "Regionlar",
+          url: "/regions",
+          icon: MapIcon,
         },
       ],
     },
