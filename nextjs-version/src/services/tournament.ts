@@ -12,6 +12,8 @@ export interface Tournament {
     start_time: string;
     end_time: string;
     entrance_fee: number;
+    team_ids?: number[];
+    teams?: any[]; // For the response which includes team objects
     is_active: boolean;
     created_at: string;
     updated_at: string;
@@ -27,6 +29,7 @@ export interface TournamentCreate {
     start_time: string;
     end_time: string;
     entrance_fee?: number;
+    team_ids?: number[];
 }
 
 export const tournamentService = {

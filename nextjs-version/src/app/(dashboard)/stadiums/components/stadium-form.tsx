@@ -37,9 +37,21 @@ import {
 } from "@/components/ui/dialog"
 import { CAPACITY_TYPES, METRO_STATIONS, ROOF_TYPES, SURFACE_TYPES } from "./stadium-constants"
 import { uploadService } from "@/services/upload"
-import { Loader2, Plus, Trash, Upload, LayoutGrid, Info, MapPin, Image as ImageIcon, Users, BadgeDollarSign, Phone, TrainFront } from "lucide-react"
+import { Loader2, Plus, Trash, Upload, LayoutGrid, Info, MapPin, Image as ImageIcon, Users, BadgeDollarSign, Phone, TrainFront, Trophy, Calendar as CalendarIcon, Clock, DollarSign, ExternalLink, Pencil, Zap } from "lucide-react"
 import dynamic from "next/dynamic"
 import { toast } from "sonner"
+import { tournamentService, Tournament, TournamentCreate } from "@/services/tournament"
+import { regionService, Region } from "@/services/region"
+import { comfortService, Comfort } from "@/services/comfort"
+import { TournamentFormDialog } from "../../tournaments/components/tournament-form-dialog"
+import { useEffect } from "react"
+import { format } from "date-fns"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Badge } from "@/components/ui/badge"
+import Link from "next/link"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Check, ChevronsUpDown } from "lucide-react"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 
 const LocationPicker = dynamic(() => import('./location-picker'), {
     ssr: false,
@@ -59,6 +71,75 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
     const [errorMessage, setErrorMessage] = useState("")
     const [showPreviewDialog, setShowPreviewDialog] = useState(false)
     const [previewImage, setPreviewImage] = useState<string | null>(null)
+    const [tournaments, setTournaments] = useState<Tournament[]>([])
+    const [tournamentsLoading, setTournamentsLoading] = useState(false)
+    const [regions, setRegions] = useState<Region[]>([])
+    const [comforts, setComforts] = useState<Comfort[]>([])
+
+    useEffect(() => {
+        fetchInitialData()
+    }, [initialData?.id])
+
+    async function fetchInitialData() {
+        if (initialData?.id) {
+            fetchTournaments(initialData.id)
+        }
+        try {
+            const [regionsData, comfortsData] = await Promise.all([
+                regionService.getAll(),
+                comfortService.getAll()
+            ])
+            setRegions(regionsData)
+            setComforts(comfortsData)
+        } catch (error) {
+            console.error("Error fetching regions/comforts:", error)
+        }
+    }
+
+    async function fetchTournaments(stadiumId: number) {
+        setTournamentsLoading(true)
+        try {
+            const data = await tournamentService.getAll(0, 50, stadiumId)
+            setTournaments(data)
+        } catch (error) {
+            console.error(error)
+        } finally {
+            setTournamentsLoading(false)
+        }
+    }
+
+    const handleAddTournament = async (tournamentData: TournamentCreate) => {
+        try {
+            await tournamentService.create(tournamentData);
+            toast.success("Turnir muvaffaqiyatli qo'shildi");
+            if (initialData?.id) fetchTournaments(initialData.id);
+        } catch (error) {
+            console.error(error);
+            toast.error("Turnir qo'shishda xatolik");
+        }
+    };
+
+    const handleEditTournament = async (id: number, tournamentData: Partial<TournamentCreate>) => {
+        try {
+            await tournamentService.update(id, tournamentData);
+            toast.success("Turnir yangilandi");
+            if (initialData?.id) fetchTournaments(initialData.id);
+        } catch (error) {
+            console.error(error);
+            toast.error("Turnirni yangilashda xatolik");
+        }
+    };
+
+    const handleDeleteTournament = async (id: number) => {
+        try {
+            await tournamentService.delete(id);
+            toast.success("Turnir o'chirildi");
+            if (initialData?.id) fetchTournaments(initialData.id);
+        } catch (error) {
+            console.error(error);
+            toast.error("Turnirni o'chirishda xatolik");
+        }
+    };
 
     const defaultValues: StadiumFormValues = {
         name_uz: initialData?.name_uz || "",
@@ -81,6 +162,8 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
         roof_type: initialData?.roof_type || "open",
         main_image: initialData?.main_image || "",
         images: initialData?.images || [],
+        region_id: initialData?.region?.id || initialData?.region_id || 0,
+        comfort_ids: initialData?.comforts?.map((c: any) => c.id) || initialData?.comfort_ids || [],
     }
 
     const form = useForm<StadiumFormValues>({
@@ -221,13 +304,14 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
 
     const [currentTab, setCurrentTab] = useState("main")
 
-    const tabs = ["main", "info", "location", "media"]
+    const tabs = initialData ? ["main", "info", "location", "media", "tournaments"] : ["main", "info", "location", "media"]
     // Validation fields for each tab
     const tabFields: Record<string, (keyof StadiumFormValues)[]> = {
-        main: ["is_active", "phones", "capacity", "price_per_hour", "surface_type", "roof_type"], // phones is complex, trigger("phones") works
+        main: ["is_active", "phones", "capacity", "price_per_hour", "surface_type", "roof_type", "comfort_ids"], // phones is complex, trigger("phones") works
         info: ["name_uz", "name_ru", "slug", "description_uz", "description_ru"],
-        location: ["latitude", "longitude", "address_uz", "address_ru", "is_metro_near", "metro_station", "metro_distance"],
+        location: ["region_id", "latitude", "longitude", "address_uz", "address_ru", "is_metro_near", "metro_station", "metro_distance"],
         media: ["main_image", "images"],
+        tournaments: [],
     }
 
     const handleNext = async () => {
@@ -274,7 +358,10 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
             <Form {...form}>
                 <form className="space-y-8">
                     <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-                        <TabsList className="grid w-full grid-cols-4 h-14 p-1.5 bg-muted/50 backdrop-blur-sm rounded-2xl border border-border/50 shadow-inner">
+                        <TabsList className={cn(
+                            "grid w-full h-14 p-1.5 bg-muted/50 backdrop-blur-sm rounded-2xl border border-border/50 shadow-inner",
+                            initialData ? "grid-cols-5" : "grid-cols-4"
+                        )}>
                             <TabsTrigger value="main" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md transition-all gap-2 py-2">
                                 <LayoutGrid className="size-4 opacity-70 group-data-[state=active]:opacity-100" />
                                 <span className="hidden sm:inline">Asosiy</span>
@@ -291,32 +378,40 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                 <ImageIcon className="size-4 opacity-70 group-data-[state=active]:opacity-100" />
                                 <span className="hidden sm:inline">Media</span>
                             </TabsTrigger>
+                            {initialData && (
+                                <TabsTrigger value="tournaments" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md transition-all gap-2 py-2">
+                                    <Trophy className="size-4 opacity-70 group-data-[state=active]:opacity-100" />
+                                    <span className="hidden sm:inline">Turnirlar</span>
+                                </TabsTrigger>
+                            )}
                         </TabsList>
 
                         <TabsContent value="main" className="space-y-4 pt-4">
 
-                            <FormField
-                                control={form.control}
-                                name="is_active"
-                                render={({ field }) => (
-                                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                                        <FormControl>
-                                            <Checkbox
-                                                checked={field.value}
-                                                onCheckedChange={field.onChange}
-                                            />
-                                        </FormControl>
-                                        <div className="space-y-1 leading-none">
-                                            <FormLabel>
-                                                Aktiv holatda
-                                            </FormLabel>
-                                            <FormDescription>
-                                                Stadion saytda ko&apos;rinadimi?
-                                            </FormDescription>
-                                        </div>
-                                    </FormItem>
-                                )}
-                            />
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="is_active"
+                                    render={({ field }) => (
+                                        <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-xl border p-4 bg-background/50">
+                                            <FormControl>
+                                                <Checkbox
+                                                    checked={field.value}
+                                                    onCheckedChange={field.onChange}
+                                                />
+                                            </FormControl>
+                                            <div className="space-y-1 leading-none">
+                                                <FormLabel className="cursor-pointer font-bold">
+                                                    Aktiv holatda
+                                                </FormLabel>
+                                                <FormDescription className="text-[10px]">
+                                                    Stadion saytda ko&apos;rinadimi?
+                                                </FormDescription>
+                                            </div>
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <FormField
@@ -363,6 +458,77 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                     )}
                                 />
                             </div>
+
+
+                            <Separator className="my-2" />
+
+                            <div className="space-y-3">
+                                <FormLabel className="flex items-center gap-2">
+                                    <LayoutGrid className="size-3.5 text-muted-foreground" />
+                                    Qulayliklar
+                                </FormLabel>
+                                <FormField
+                                    control={form.control}
+                                    name="comfort_ids"
+                                    render={({ field }) => (
+                                        <div className="space-y-3">
+                                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                                {comforts.map((comfort) => {
+                                                    const isChecked = Array.isArray(field.value) && field.value.includes(comfort.id);
+
+                                                    return (
+                                                        <div
+                                                            key={comfort.id}
+                                                            className={cn(
+                                                                "group flex flex-row items-center space-x-3 space-y-0 rounded-xl border p-3 cursor-pointer transition-all hover:bg-primary/5 select-none",
+                                                                isChecked
+                                                                    ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                                                                    : "bg-background/50 border-border/50 hover:border-primary/30"
+                                                            )}
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                const current = Array.isArray(field.value) ? field.value : [];
+                                                                const newValue = isChecked
+                                                                    ? current.filter(id => id !== comfort.id)
+                                                                    : [...current, comfort.id];
+                                                                field.onChange(newValue);
+                                                            }}
+                                                        >
+                                                            <div className={cn(
+                                                                "flex items-center justify-center size-4 rounded-md border transition-all",
+                                                                isChecked
+                                                                    ? "bg-primary border-primary text-primary-foreground"
+                                                                    : "border-muted-foreground/30 group-hover:border-primary/50"
+                                                            )}>
+                                                                {isChecked && <Check className="size-3" strokeWidth={3} />}
+                                                            </div>
+
+                                                            <div className="flex items-center gap-2 leading-none">
+                                                                {comfort.image_url ? (
+                                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                                    <img src={comfort.image_url} alt="" className="size-4 object-contain opacity-70" />
+                                                                ) : (
+                                                                    <Zap className="size-3.5 text-muted-foreground opacity-50" />
+                                                                )}
+                                                                <span className={cn(
+                                                                    "text-xs font-medium transition-colors",
+                                                                    isChecked ? "text-primary" : "text-muted-foreground"
+                                                                )}>
+                                                                    {comfort.title_uz}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                            <FormMessage />
+                                        </div>
+                                    )}
+                                />
+                            </div>
+
+                            <Separator className="my-2" />
+
                             <div className="grid grid-cols-2 gap-4">
                                 <FormField
                                     control={form.control}
@@ -372,13 +538,13 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                             <FormLabel>Maydon qoplamasi</FormLabel>
                                             <Select onValueChange={field.onChange} value={field.value}>
                                                 <FormControl>
-                                                    <SelectTrigger>
+                                                    <SelectTrigger className="h-11 rounded-xl bg-background/50 border-border/50">
                                                         <SelectValue placeholder="Qoplamani tanlang" />
                                                     </SelectTrigger>
                                                 </FormControl>
-                                                <SelectContent>
+                                                <SelectContent className="rounded-xl">
                                                     {SURFACE_TYPES.map((type) => (
-                                                        <SelectItem key={type.value} value={type.value}>
+                                                        <SelectItem key={type.value} value={type.value} className="rounded-lg m-1">
                                                             {type.label}
                                                         </SelectItem>
                                                     ))}
@@ -396,13 +562,13 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                             <FormLabel>Tom turi</FormLabel>
                                             <Select onValueChange={field.onChange} value={field.value}>
                                                 <FormControl>
-                                                    <SelectTrigger>
+                                                    <SelectTrigger className="h-11 rounded-xl bg-background/50 border-border/50">
                                                         <SelectValue placeholder="Tom turini tanlang" />
                                                     </SelectTrigger>
                                                 </FormControl>
-                                                <SelectContent>
+                                                <SelectContent className="rounded-xl">
                                                     {ROOF_TYPES.map((type) => (
-                                                        <SelectItem key={type.value} value={type.value}>
+                                                        <SelectItem key={type.value} value={type.value} className="rounded-lg m-1">
                                                             {type.label}
                                                         </SelectItem>
                                                     ))}
@@ -620,6 +786,35 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
 
                                     {/* Right Side: Address Inputs */}
                                     <div className="flex flex-col gap-4 w-full">
+                                        <FormField
+                                            control={form.control}
+                                            name="region_id"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel className="flex items-center gap-2">
+                                                        <MapPin className="size-3.5 text-muted-foreground" />
+                                                        Hudud
+                                                    </FormLabel>
+                                                    <Select onValueChange={(val) => field.onChange(Number(val))} value={field.value?.toString()}>
+                                                        <FormControl>
+                                                            <SelectTrigger className="w-full h-11 rounded-xl bg-background/50 border-border/50 shadow-sm transition-all hover:bg-background/80 hover:border-primary/30">
+                                                                <SelectValue placeholder="Hududni tanlang" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent className="rounded-xl border-border/50 shadow-2xl">
+                                                            <ScrollArea className="h-[200px]">
+                                                                {regions.map((region) => (
+                                                                    <SelectItem key={region.id} value={region.id.toString()} className="rounded-lg m-1 hover:bg-primary/5 cursor-pointer">
+                                                                        {region.name_uz}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </ScrollArea>
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
                                         <FormField
                                             control={form.control}
                                             name="address_uz"
@@ -900,6 +1095,113 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
 
                             {uploading && <div className="text-sm text-muted-foreground flex items-center justify-center py-4"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Rasmlar yuklanmoqda...</div>}
                         </TabsContent>
+
+                        {initialData && (
+                            <TabsContent value="tournaments" className="space-y-6 pt-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-1">
+                                        <h3 className="text-lg font-bold">Stadion turnirlari</h3>
+                                        <p className="text-sm text-muted-foreground">Ushbu stadionda o'tkaziladigan barcha turnirlarni boshqaring.</p>
+                                    </div>
+                                    <TournamentFormDialog
+                                        fixedStadiumId={initialData.id}
+                                        onAddTournament={handleAddTournament}
+                                        trigger={
+                                            <Button className="gap-2 rounded-xl">
+                                                <Plus className="h-4 w-4" /> Turnir qo'shish
+                                            </Button>
+                                        }
+                                    />
+                                </div>
+
+                                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                    {tournamentsLoading ? (
+                                        <div className="col-span-full py-12 flex flex-col items-center justify-center gap-4 opacity-50">
+                                            <Loader2 className="h-8 w-8 animate-spin" />
+                                            <p className="font-medium text-muted-foreground">Turnirlar yuklanmoqda...</p>
+                                        </div>
+                                    ) : tournaments.length === 0 ? (
+                                        <div className="col-span-full py-12 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center gap-4 bg-muted/20">
+                                            <div className="p-4 bg-muted rounded-full">
+                                                <Trophy className="h-10 w-10 text-muted-foreground/30" />
+                                            </div>
+                                            <div className="text-center space-y-1">
+                                                <p className="font-bold">Turnirlar hali yo'q</p>
+                                                <p className="text-sm text-muted-foreground">Ushbu stadion uchun birinchi turnirni yarating.</p>
+                                            </div>
+                                            <TournamentFormDialog
+                                                fixedStadiumId={initialData.id}
+                                                onAddTournament={handleAddTournament}
+                                                trigger={
+                                                    <Button variant="outline" className="rounded-xl">
+                                                        Birinchi turnirni qo'shing
+                                                    </Button>
+                                                }
+                                            />
+                                        </div>
+                                    ) : (
+                                        tournaments.map((tournament) => (
+                                            <div key={tournament.id} className="group relative rounded-2xl border bg-card p-5 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300">
+                                                <div className="flex flex-col h-full gap-4">
+                                                    <div className="flex items-start justify-between gap-4">
+                                                        <div className="space-y-1">
+                                                            <h4 className="font-bold text-sm leading-tight line-clamp-2">{tournament.title_uz}</h4>
+                                                            <div className="flex items-center gap-2">
+                                                                <Badge variant={tournament.is_active ? "default" : "secondary"} className="h-5 text-[10px] px-2">
+                                                                    {tournament.is_active ? "Faol" : "Yopilgan"}
+                                                                </Badge>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-1">
+                                                            <TournamentFormDialog
+                                                                tournament={tournament}
+                                                                fixedStadiumId={initialData.id}
+                                                                onEditTournament={handleEditTournament}
+                                                                onDeleteTournament={handleDeleteTournament}
+                                                                trigger={
+                                                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                        <Pencil className="h-4 w-4" />
+                                                                    </Button>
+                                                                }
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 gap-3 py-3 border-y border-dashed">
+                                                        <div className="flex flex-col gap-1">
+                                                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider flex items-center gap-1">
+                                                                <CalendarIcon className="h-3 w-3" /> Sana
+                                                            </span>
+                                                            <span className="text-xs font-semibold">{format(new Date(tournament.start_time), "dd.MM.yyyy")}</span>
+                                                        </div>
+                                                        <div className="flex flex-col gap-1">
+                                                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider flex items-center gap-1">
+                                                                <Clock className="h-3 w-3" /> Vaqt
+                                                            </span>
+                                                            <span className="text-xs font-semibold">{format(new Date(tournament.start_time), "HH:mm")}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="mt-auto flex items-center justify-between">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[10px] text-muted-foreground font-bold tracking-wider uppercase">To'lov</span>
+                                                            <span className="text-sm font-bold text-primary flex items-center gap-1">
+                                                                <DollarSign className="h-3 w-3" /> {tournament.entrance_fee.toLocaleString()}
+                                                            </span>
+                                                        </div>
+                                                        <Button variant="ghost" size="sm" className="h-8 px-2 text-[11px] gap-1 hover:text-primary rounded-lg" asChild>
+                                                            <Link href={`/tournaments?stadium_id=${initialData.id}`}>
+                                                                Batafsil <ExternalLink className="h-3 w-3" />
+                                                            </Link>
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </TabsContent>
+                        )}
                     </Tabs>
 
                     <div className="flex justify-between items-center bg-muted/30 p-4 rounded-2xl border border-border/50 mt-8">
@@ -916,7 +1218,7 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                             Avvalgisi
                         </Button>
 
-                        {currentTab === "media" ? (
+                        {currentTab === tabs[tabs.length - 1] ? (
                             <Button
                                 type="button"
                                 disabled={loading || uploading}

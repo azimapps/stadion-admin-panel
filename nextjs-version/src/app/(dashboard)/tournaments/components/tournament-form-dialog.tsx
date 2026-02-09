@@ -57,6 +57,7 @@ type TournamentFormValues = z.infer<typeof tournamentFormSchema>
 
 interface TournamentFormDialogProps {
     tournament?: Tournament
+    fixedStadiumId?: number
     onAddTournament?: (data: TournamentCreate) => Promise<void>
     onEditTournament?: (id: number, data: Partial<TournamentCreate>) => Promise<void>
     onDeleteTournament?: (id: number) => Promise<void>
@@ -65,6 +66,7 @@ interface TournamentFormDialogProps {
 
 export function TournamentFormDialog({
     tournament,
+    fixedStadiumId,
     onAddTournament,
     onEditTournament,
     onDeleteTournament,
@@ -83,18 +85,19 @@ export function TournamentFormDialog({
             title_ru: tournament?.title_ru || "",
             description_uz: tournament?.description_uz || "",
             description_ru: tournament?.description_ru || "",
-            stadium_id: tournament?.stadium_id || 0,
+            stadium_id: fixedStadiumId || tournament?.stadium_id || 0,
             start_time: tournament?.start_time ? new Date(tournament.start_time).toISOString().slice(0, 16) : "",
             end_time: tournament?.end_time ? new Date(tournament.end_time).toISOString().slice(0, 16) : "",
             entrance_fee: tournament?.entrance_fee || 0,
+            team_ids: tournament?.team_ids || [],
         },
     })
 
     useEffect(() => {
-        if (open) {
+        if (open && !fixedStadiumId) {
             stadiumsService.getAll().then(setStadiums).catch(console.error)
         }
-    }, [open])
+    }, [open, fixedStadiumId])
 
     async function onSubmit(values: TournamentFormValues) {
         setLoading(true)
@@ -171,64 +174,92 @@ export function TournamentFormDialog({
 
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 overflow-y-auto p-10 pt-2 space-y-10 custom-scrollbar">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <FormField
-                                control={form.control}
-                                name="stadium_id"
-                                render={({ field }) => (
-                                    <FormItem className="space-y-2">
-                                        <FormLabel className="text-sm font-medium text-muted-foreground ml-1">Stadionni tanlang</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value.toString()}>
-                                            <FormControl>
-                                                <SelectTrigger className="h-12 rounded-xl bg-muted/20 border-border/40 font-medium transition-all focus:ring-primary/20">
-                                                    <div className="flex items-center gap-3">
-                                                        <Trophy className="size-4 text-primary/60" />
-                                                        <SelectValue placeholder="Stadionni tanlang" />
-                                                    </div>
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent className="rounded-xl border-border/40 shadow-2xl p-1 bg-background/95 backdrop-blur-xl">
-                                                {stadiums.map((stadium) => (
-                                                    <SelectItem
-                                                        key={stadium.id}
-                                                        value={stadium.id.toString()}
-                                                        className="rounded-lg py-2 px-3 focus:bg-primary focus:text-white transition-colors cursor-pointer mb-1 last:mb-0"
-                                                    >
-                                                        <div className="flex items-center justify-between w-full gap-8">
-                                                            <span className="text-sm font-medium">{stadium.name_uz}</span>
-                                                            <span className="text-[10px] opacity-40 font-mono">ID: {stadium.id}</span>
+                        {!fixedStadiumId && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <FormField
+                                    control={form.control}
+                                    name="stadium_id"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-2">
+                                            <FormLabel className="text-sm font-medium text-muted-foreground ml-1">Stadionni tanlang</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value.toString()}>
+                                                <FormControl>
+                                                    <SelectTrigger className="h-12 rounded-xl bg-muted/20 border-border/40 font-medium transition-all focus:ring-primary/20">
+                                                        <div className="flex items-center gap-3">
+                                                            <Trophy className="size-4 text-primary/60" />
+                                                            <SelectValue placeholder="Stadionni tanlang" />
                                                         </div>
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent className="rounded-xl border-border/40 shadow-2xl p-1 bg-background/95 backdrop-blur-xl">
+                                                    {stadiums.map((stadium) => (
+                                                        <SelectItem
+                                                            key={stadium.id}
+                                                            value={stadium.id.toString()}
+                                                            className="rounded-lg py-2 px-3 focus:bg-primary focus:text-white transition-colors cursor-pointer mb-1 last:mb-0"
+                                                        >
+                                                            <div className="flex items-center justify-between w-full gap-8">
+                                                                <span className="text-sm font-medium">{stadium.name_uz}</span>
+                                                                <span className="text-[10px] opacity-40 font-mono">ID: {stadium.id}</span>
+                                                            </div>
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
 
-                            <FormField
-                                control={form.control}
-                                name="entrance_fee"
-                                render={({ field }) => (
-                                    <FormItem className="space-y-2">
-                                        <FormLabel className="text-sm font-medium text-muted-foreground ml-1">Kirish haqi (UZS)</FormLabel>
-                                        <FormControl>
-                                            <div className="relative group">
-                                                <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-primary/40 group-focus-within:text-primary transition-all" />
-                                                <Input
-                                                    type="number"
-                                                    placeholder="0"
-                                                    className="h-12 pl-12 rounded-xl bg-muted/20 border-border/40 font-medium text-base transition-all focus-visible:ring-primary/20"
-                                                    {...field}
-                                                />
-                                            </div>
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
+                                <FormField
+                                    control={form.control}
+                                    name="entrance_fee"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-2">
+                                            <FormLabel className="text-sm font-medium text-muted-foreground ml-1">Kirish haqi (UZS)</FormLabel>
+                                            <FormControl>
+                                                <div className="relative group">
+                                                    <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-primary/40 group-focus-within:text-primary transition-all" />
+                                                    <Input
+                                                        type="number"
+                                                        placeholder="0"
+                                                        className="h-12 pl-12 rounded-xl bg-muted/20 border-border/40 font-medium text-base transition-all focus-visible:ring-primary/20"
+                                                        {...field}
+                                                    />
+                                                </div>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                        )}
+
+                        {fixedStadiumId && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <FormField
+                                    control={form.control}
+                                    name="entrance_fee"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-2 md:col-span-2">
+                                            <FormLabel className="text-sm font-medium text-muted-foreground ml-1">Kirish haqi (UZS)</FormLabel>
+                                            <FormControl>
+                                                <div className="relative group">
+                                                    <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-primary/40 group-focus-within:text-primary transition-all" />
+                                                    <Input
+                                                        type="number"
+                                                        placeholder="0"
+                                                        className="h-12 pl-12 rounded-xl bg-muted/20 border-border/40 font-medium text-base transition-all focus-visible:ring-primary/20"
+                                                        {...field}
+                                                    />
+                                                </div>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                        )}
 
                         {/* Standardized Stadium Info Card */}
                         {(() => {

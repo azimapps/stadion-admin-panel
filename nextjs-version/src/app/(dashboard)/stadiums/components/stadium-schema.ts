@@ -21,6 +21,8 @@ export const stadiumSchema = z.object({
     main_image: z.string().default("").refine(val => val.length > 0, "Asosiy rasmni yuklash shart"),
     images: z.array(z.string()).default([]).refine(val => val.length > 0, "Kamida bitta qo'shimcha rasm yuklash shart"),
     is_active: z.boolean().default(true).optional(),
+    region_id: z.coerce.number().min(1, "Hududni tanlash shart"),
+    comfort_ids: z.array(z.number()).default([]),
 }).superRefine((data, ctx) => {
     if (data.is_metro_near) {
         if (!data.metro_station || data.metro_station.length === 0) {
