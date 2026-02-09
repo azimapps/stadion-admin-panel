@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Trash2, Trophy, Plus, Calendar as CalendarIcon, MapPin, DollarSign, Clock, Users } from "lucide-react"
+import { Trash2, Trophy, Plus, Calendar as CalendarIcon, MapPin, DollarSign, Clock, Users, Check } from "lucide-react"
 import { format, parseISO } from "date-fns"
 
 import { Button } from "@/components/ui/button"
@@ -31,6 +31,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Tournament, TournamentCreate } from "@/services/tournament"
 import { Stadium, stadiumsService } from "@/services/stadium"
+import { Team, teamService } from "@/services/team"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog"
 import {
@@ -51,6 +52,7 @@ const tournamentFormSchema = z.object({
     start_time: z.string().min(1, { message: "Boshlanish vaqtini tanlang." }),
     end_time: z.string().min(1, { message: "Tugash vaqtini tanlang." }),
     entrance_fee: z.coerce.number().min(0),
+    team_ids: z.array(z.number()).default([]),
 })
 
 type TournamentFormValues = z.infer<typeof tournamentFormSchema>
@@ -76,6 +78,7 @@ export function TournamentFormDialog({
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const [stadiums, setStadiums] = useState<Stadium[]>([])
+    const [teams, setTeams] = useState<Team[]>([])
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
     const form = useForm<any>({
@@ -94,8 +97,11 @@ export function TournamentFormDialog({
     })
 
     useEffect(() => {
-        if (open && !fixedStadiumId) {
-            stadiumsService.getAll().then(setStadiums).catch(console.error)
+        if (open) {
+            if (!fixedStadiumId) {
+                stadiumsService.getAll().then(setStadiums).catch(console.error)
+            }
+            teamService.getAll().then(setTeams).catch(console.error)
         }
     }, [open, fixedStadiumId])
 
@@ -513,6 +519,79 @@ export function TournamentFormDialog({
                                 />
                             </TabsContent>
                         </Tabs>
+
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <FormLabel className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-primary/80">
+                                    <Users className="size-4" />
+                                    Ishtirokchi jamoalar
+                                </FormLabel>
+                                <Badge variant="outline" className="rounded-full px-3 py-1 bg-primary/5 text-primary border-primary/20">
+                                    {form.watch("team_ids")?.length || 0} ta tanlandi
+                                </Badge>
+                            </div>
+
+                            <FormField
+                                control={form.control}
+                                name="team_ids"
+                                render={({ field }) => (
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                        {teams.map((team) => {
+                                            const isChecked = Array.isArray(field.value) && field.value.includes(team.id);
+                                            return (
+                                                <div
+                                                    key={team.id}
+                                                    onClick={() => {
+                                                        const current = Array.isArray(field.value) ? field.value : [];
+                                                        const newValue = isChecked
+                                                            ? current.filter(id => id !== team.id)
+                                                            : [...current, team.id];
+                                                        field.onChange(newValue);
+                                                    }}
+                                                    className={cn(
+                                                        "group relative flex flex-col items-center gap-3 p-4 rounded-2xl border transition-all duration-300 cursor-pointer select-none",
+                                                        isChecked
+                                                            ? "bg-primary/10 border-primary shadow-lg shadow-primary/10 scale-105 z-10"
+                                                            : "bg-muted/10 border-border/40 hover:border-primary/40 hover:bg-muted/20"
+                                                    )}
+                                                >
+                                                    <div className={cn(
+                                                        "relative size-14 rounded-full overflow-hidden border-2 transition-transform duration-500",
+                                                        isChecked ? "border-primary scale-110 rotate-3" : "border-border/60 group-hover:scale-105"
+                                                    )}>
+                                                        {team.logo_url ? (
+                                                            <img src={team.logo_url} alt="" className="size-full object-cover" />
+                                                        ) : (
+                                                            <div className="size-full bg-muted flex items-center justify-center">
+                                                                <Users className="size-6 text-muted-foreground/30" />
+                                                            </div>
+                                                        )}
+                                                        {isChecked && (
+                                                            <div className="absolute inset-0 bg-primary/20 flex items-center justify-center backdrop-blur-[1px]">
+                                                                <div className="bg-primary text-white rounded-full p-1 shadow-lg">
+                                                                    <Check className="size-3" strokeWidth={4} />
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-center space-y-0.5">
+                                                        <p className={cn(
+                                                            "text-xs font-bold transition-colors line-clamp-1",
+                                                            isChecked ? "text-primary" : "text-foreground"
+                                                        )}>
+                                                            {team.name_uz}
+                                                        </p>
+                                                        <p className="text-[9px] font-medium text-muted-foreground opacity-60">
+                                                            ID: {team.id}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            />
+                        </div>
                     </form>
                 </Form>
 
