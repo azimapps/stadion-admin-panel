@@ -20,6 +20,8 @@ import {
   Video,
   Trophy,
   Wifi,
+  Percent,
+  Clock,
 } from "lucide-react"
 import Link from "next/link"
 import { Logo } from "@/components/logo"
@@ -91,6 +93,16 @@ const data = {
           title: "Regionlar",
           url: "/regions",
           icon: MapIcon,
+        },
+        {
+          title: "Ish vaqti",
+          url: "/timetables",
+          icon: Clock,
+        },
+        {
+          title: "Chegirmalar",
+          url: "/discounts",
+          icon: Percent,
         },
       ],
     },
