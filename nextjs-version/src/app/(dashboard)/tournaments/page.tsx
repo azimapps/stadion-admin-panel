@@ -87,7 +87,7 @@ export default function TournamentsPage() {
                             <div className="size-12 rounded-[1.25rem] bg-primary/10 flex items-center justify-center shadow-inner">
                                 <Trophy className="size-6 text-primary" />
                             </div>
-                            <h1 className="text-4xl font-black italic tracking-tighter uppercase italic">Turnirlar</h1>
+                            <h1 className="text-4xl font-black italic tracking-tighter uppercase">Turnirlar</h1>
                         </div>
                         <p className="text-sm font-medium text-muted-foreground/60 tracking-wide ml-1">
                             Barcha futbol turnirlari va musobaqalarni shu yerdan boshqaring.

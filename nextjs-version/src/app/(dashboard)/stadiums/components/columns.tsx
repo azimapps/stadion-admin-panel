@@ -35,7 +35,7 @@ export const columns: ColumnDef<Stadium>[] = [
                 </div>
                 {row.original.metro_station && (
                     <div className="flex items-center gap-1.5 text-primary/40 text-[9px] font-bold uppercase tracking-wide ml-4">
-                        <span>Metro: {row.original.metro_station} ({row.original.metro_distance}m)</span>
+                        <span>Metro: {row.original.metro_station} ({row.original.metro_distance}km)</span>
                     </div>
                 )}
             </div>

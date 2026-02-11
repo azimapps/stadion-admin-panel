@@ -86,7 +86,7 @@ export default function DiscountsPage() {
                             <div className="size-12 rounded-[1.25rem] bg-primary/10 flex items-center justify-center shadow-inner">
                                 <Percent className="size-6 text-primary" />
                             </div>
-                            <h1 className="text-4xl font-black italic tracking-tighter uppercase italic">Chegirmalar</h1>
+                            <h1 className="text-4xl font-black italic tracking-tighter uppercase">Chegirmalar</h1>
                         </div>
                         <p className="text-sm font-medium text-muted-foreground/60 tracking-wide ml-1">
                             Stadionlar uchun chegirmalarni shu yerdan boshqaring.

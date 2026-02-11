@@ -37,7 +37,29 @@ import {
 } from "@/components/ui/dialog"
 import { CAPACITY_TYPES, METRO_STATIONS, ROOF_TYPES, SURFACE_TYPES } from "./stadium-constants"
 import { uploadService } from "@/services/upload"
-import { Loader2, Plus, Trash, Upload, LayoutGrid, Info, MapPin, Image as ImageIcon, Users, BadgeDollarSign, Phone, TrainFront, Trophy, Calendar as CalendarIcon, Clock, DollarSign, ExternalLink, Pencil, Zap } from "lucide-react"
+import {
+    Loader2,
+    Plus,
+    Trash,
+    Upload,
+    LayoutGrid,
+    Info,
+    MapPin,
+    Image as ImageIcon,
+    Users,
+    BadgeDollarSign,
+    Phone,
+    TrainFront,
+    Trophy,
+    Calendar as CalendarIcon,
+    Clock,
+    DollarSign,
+    ExternalLink,
+    Pencil,
+    Zap,
+    Check,
+    ChevronsUpDown
+} from "lucide-react"
 import dynamic from "next/dynamic"
 import { toast } from "sonner"
 import { tournamentService, Tournament, TournamentCreate } from "@/services/tournament"
@@ -50,7 +72,6 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Check, ChevronsUpDown } from "lucide-react"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 
 const LocationPicker = dynamic(() => import('./location-picker'), {
@@ -158,6 +179,7 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
         phones: initialData?.phone ? initialData.phone.map((p: string) => ({ value: p })) : (initialData?.phones || [{ value: "" }]),
         capacity: initialData?.capacity || "7x7",
         price_per_hour: initialData?.price_per_hour || 200000,
+        discount_price_per_hour: initialData?.discount_price_per_hour || 0,
         surface_type: initialData?.surface_type || "artificial",
         roof_type: initialData?.roof_type || "open",
         main_image: initialData?.main_image || "",
@@ -452,6 +474,22 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                             </FormLabel>
                                             <FormControl>
                                                 <Input type="number" step="1000" {...field} className="h-11 rounded-xl bg-background/50 border-border/50" />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="discount_price_per_hour"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="flex items-center gap-2 text-primary/80">
+                                                <Zap className="size-3.5 text-primary/60" />
+                                                Chegirma narxi (ixtiyoriy)
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Input type="number" step="1000" {...field} placeholder="0" className="h-11 rounded-xl bg-primary/5 border-primary/20 focus-visible:ring-primary/20 font-bold" />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -1239,12 +1277,12 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                         )}
                     </div>
                 </form>
-            </Form >
+            </Form>
 
             <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>M'alumotlarni saqlash</DialogTitle>
+                        <DialogTitle>Ma&apos;lumotlarni saqlash</DialogTitle>
                         <DialogDescription>
                             Barcha kiritilgan ma'lumotlar to'g'riligiga ishonchingiz komilmi?
                         </DialogDescription>

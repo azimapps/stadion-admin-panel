@@ -20,10 +20,13 @@ export interface Stadium {
     surface_type?: string;
     roof_type?: string;
     price_per_hour: number;
+    discount_price_per_hour?: number;
     phone: string[];
     main_image?: string;
     images?: string[];
     is_active?: boolean;
+    region_id?: number;
+    comfort_ids?: number[];
 }
 
 export const stadiumsService = {
