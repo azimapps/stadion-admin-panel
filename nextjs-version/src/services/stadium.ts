@@ -2,6 +2,13 @@ import { apiClient } from '@/lib/api-client';
 
 const ENDPOINT = '/api/v1/stadiums';
 
+export interface StadiumDiscount {
+    id: number;
+    discount_price_per_hour: number;
+    start_datetime: string;
+    end_datetime: string;
+}
+
 export interface Stadium {
     id: number;
     slug: string;
@@ -27,6 +34,7 @@ export interface Stadium {
     is_active?: boolean;
     region_id?: number;
     comfort_ids?: number[];
+    discount?: StadiumDiscount | null;
 }
 
 export const stadiumsService = {

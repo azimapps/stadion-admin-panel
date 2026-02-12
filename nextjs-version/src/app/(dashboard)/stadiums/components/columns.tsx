@@ -3,11 +3,12 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Stadium } from "@/services/stadium"
 import { Button } from "@/components/ui/button"
-import { ArrowUpDown, MapPin, BadgeDollarSign, Users2, Eye, Pencil, Trash2 } from "lucide-react"
+import { ArrowUpDown, MapPin, BadgeDollarSign, Users2, Eye, Pencil, Trash2, Percent, Calendar } from "lucide-react"
 import Link from "next/link"
 import { CellAction } from "./cell-action"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { format } from "date-fns"
 
 export const columns: ColumnDef<Stadium>[] = [
     {
@@ -52,6 +53,74 @@ export const columns: ColumnDef<Stadium>[] = [
                         {price.toLocaleString()} UZS
                     </span>
                     <span className="text-[9px] font-bold text-muted-foreground/30 uppercase tracking-[0.2em]">soatiga</span>
+                </div>
+            )
+        },
+    },
+    {
+        id: "discount",
+        header: "Chegirma",
+        cell: ({ row }) => {
+            const discount = row.original.discount
+            const topLevelDiscountPrice = row.original.discount_price_per_hour
+
+            if (!discount && !topLevelDiscountPrice) {
+                return (
+                    <div className="flex items-center gap-1.5 text-muted-foreground/40">
+                        <span className="text-[10px] font-medium">—</span>
+                    </div>
+                )
+            }
+
+            if (discount) {
+                const now = new Date()
+                const startDate = new Date(discount.start_datetime)
+                const endDate = new Date(discount.end_datetime)
+                const isActive = now >= startDate && now <= endDate
+
+                return (
+                    <div className="flex flex-col gap-1 min-w-[140px]">
+                        <div className="flex items-center gap-1.5">
+                            <Percent className={cn("size-3", isActive ? "text-green-500" : "text-orange-400")} />
+                            <span className={cn(
+                                "font-black text-sm italic tracking-tight",
+                                isActive ? "text-green-600" : "text-orange-500"
+                            )}>
+                                {discount.discount_price_per_hour.toLocaleString()} UZS
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-1 text-[9px] font-medium text-muted-foreground/50">
+                            <Calendar className="size-2.5" />
+                            <span>{format(startDate, "dd.MM")} - {format(endDate, "dd.MM.yy")}</span>
+                        </div>
+                        <Badge
+                            variant={isActive ? "default" : "secondary"}
+                            className={cn(
+                                "w-fit text-[8px] px-1.5 py-0 h-4",
+                                isActive ? "bg-green-500/10 text-green-600 border-green-500/20" : "bg-orange-500/10 text-orange-500 border-orange-500/20"
+                            )}
+                        >
+                            {isActive ? "Faol" : "Kutilmoqda"}
+                        </Badge>
+                    </div>
+                )
+            }
+
+            // Fallback to top-level discount price if no discount object (permanent discount)
+            return (
+                <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-1.5">
+                        <Percent className="size-3 text-green-500" />
+                        <span className="font-black text-sm italic tracking-tight text-green-600">
+                            {topLevelDiscountPrice!.toLocaleString()} UZS
+                        </span>
+                    </div>
+                    <Badge
+                        variant="default"
+                        className="w-fit text-[8px] px-1.5 py-0 h-4 bg-green-500/10 text-green-600 border-green-500/20"
+                    >
+                        Doimiy
+                    </Badge>
                 </div>
             )
         },

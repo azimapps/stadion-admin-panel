@@ -223,7 +223,20 @@ export default function StadiumDetailsPage() {
                                                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                                                     <Banknote className="h-3 w-3" /> Narxi (soat)
                                                 </span>
-                                                <span className="text-xl font-bold">{formatPrice(data.price_per_hour)}</span>
+                                                <div className="flex items-baseline gap-2">
+                                                    {data.discount_price_per_hour || data.discount?.discount_price_per_hour ? (
+                                                        <>
+                                                            <span className="text-xl font-bold text-emerald-600">
+                                                                {formatPrice(data.discount_price_per_hour || data.discount!.discount_price_per_hour)}
+                                                            </span>
+                                                            <span className="text-sm font-medium text-muted-foreground line-through opacity-70">
+                                                                {formatPrice(data.price_per_hour)}
+                                                            </span>
+                                                        </>
+                                                    ) : (
+                                                        <span className="text-xl font-bold">{formatPrice(data.price_per_hour)}</span>
+                                                    )}
+                                                </div>
                                             </div>
 
                                             <div className="flex flex-col gap-1">

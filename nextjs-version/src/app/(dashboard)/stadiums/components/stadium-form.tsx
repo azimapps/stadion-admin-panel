@@ -179,7 +179,7 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
         phones: initialData?.phone ? initialData.phone.map((p: string) => ({ value: p })) : (initialData?.phones || [{ value: "" }]),
         capacity: initialData?.capacity || "7x7",
         price_per_hour: initialData?.price_per_hour || 200000,
-        discount_price_per_hour: initialData?.discount_price_per_hour || 0,
+        discount_price_per_hour: initialData?.discount_price_per_hour || initialData?.discount?.discount_price_per_hour || undefined,
         surface_type: initialData?.surface_type || "artificial",
         roof_type: initialData?.roof_type || "open",
         main_image: initialData?.main_image || "",
@@ -329,7 +329,7 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
     const tabs = initialData ? ["main", "info", "location", "media", "tournaments"] : ["main", "info", "location", "media"]
     // Validation fields for each tab
     const tabFields: Record<string, (keyof StadiumFormValues)[]> = {
-        main: ["is_active", "phones", "capacity", "price_per_hour", "surface_type", "roof_type", "comfort_ids"], // phones is complex, trigger("phones") works
+        main: ["is_active", "phones", "capacity", "price_per_hour", "discount_price_per_hour", "surface_type", "roof_type", "comfort_ids"], // phones is complex, trigger("phones") works
         info: ["name_uz", "name_ru", "slug", "description_uz", "description_ru"],
         location: ["region_id", "latitude", "longitude", "address_uz", "address_ru", "is_metro_near", "metro_station", "metro_distance"],
         media: ["main_image", "images"],
@@ -479,18 +479,24 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                         </FormItem>
                                     )}
                                 />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
                                 <FormField
                                     control={form.control}
                                     name="discount_price_per_hour"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="flex items-center gap-2 text-primary/80">
-                                                <Zap className="size-3.5 text-primary/60" />
-                                                Chegirma narxi (ixtiyoriy)
+                                            <FormLabel className="flex items-center gap-2">
+                                                <BadgeDollarSign className="size-3.5 text-emerald-500" />
+                                                Chegirma narxi (UZS)
                                             </FormLabel>
                                             <FormControl>
-                                                <Input type="number" step="1000" {...field} placeholder="0" className="h-11 rounded-xl bg-primary/5 border-primary/20 focus-visible:ring-primary/20 font-bold" />
+                                                <Input type="number" step="1000" {...field} className="h-11 rounded-xl bg-background/50 border-border/50 text-emerald-600 font-bold" />
                                             </FormControl>
+                                            <FormDescription className="text-[10px]">
+                                                Ixtiyoriy. Agar chegirma bo&apos;lsa kiriting.
+                                            </FormDescription>
                                             <FormMessage />
                                         </FormItem>
                                     )}
