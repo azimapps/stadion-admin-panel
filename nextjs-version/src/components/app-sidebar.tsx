@@ -15,6 +15,7 @@ import {
   CreditCard,
   LayoutTemplate,
   Users,
+  UserCircle,
   MapPin,
   Map as MapIcon,
   Video,
@@ -63,6 +64,11 @@ const data = {
           title: "Managerlar",
           url: "/users",
           icon: Users,
+        },
+        {
+          title: "Foydalanuvchilar",
+          url: "/app-users",
+          icon: UserCircle,
         },
         {
           title: "Media",
