@@ -54,22 +54,22 @@ export const columns: ColumnDef<Stadium>[] = [
                 return now >= startDate && now <= endDate
             })()
 
-            // Show with strikethrough if active time-based discount
+            // Show with strikethrough if active time-based discount (GENERAL DISCOUNT - applies to whole booking)
             if (hasActiveDiscount && discount) {
                 return (
                     <div className="flex flex-col gap-0.5">
                         <span className="text-[11px] text-muted-foreground/50 line-through font-medium">
                             {price.toLocaleString()} UZS
                         </span>
-                        <span className="font-black text-sm text-green-600 italic tracking-tight uppercase">
+                        <span className="font-black text-sm text-blue-600 italic tracking-tight uppercase">
                             {discount.discount_price_per_hour.toLocaleString()} UZS
                         </span>
-                        <span className="text-[9px] font-bold text-green-500/50 uppercase tracking-[0.2em]">chegirma</span>
+                        <span className="text-[9px] font-bold text-blue-500/50 uppercase tracking-[0.2em]">umumiy chegirma</span>
                     </div>
                 )
             }
 
-            // Show with strikethrough if permanent discount (top-level)
+            // Show with strikethrough if permanent discount (PER-HOUR DISCOUNT - applies only per hour)
             if (topLevelDiscountPrice && topLevelDiscountPrice > 0 && topLevelDiscountPrice < price) {
                 return (
                     <div className="flex flex-col gap-0.5">
@@ -79,7 +79,7 @@ export const columns: ColumnDef<Stadium>[] = [
                         <span className="font-black text-sm text-green-600 italic tracking-tight uppercase">
                             {topLevelDiscountPrice.toLocaleString()} UZS
                         </span>
-                        <span className="text-[9px] font-bold text-green-500/50 uppercase tracking-[0.2em]">chegirma</span>
+                        <span className="text-[9px] font-bold text-green-500/50 uppercase tracking-[0.2em]">soatlik chegirma</span>
                     </div>
                 )
             }

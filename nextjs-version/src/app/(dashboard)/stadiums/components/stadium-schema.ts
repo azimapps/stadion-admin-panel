@@ -44,7 +44,7 @@ export const stadiumSchema = z.object({
     if (data.discount_price_per_hour && data.discount_price_per_hour >= data.price_per_hour) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "Chegirma narxi asosiy narxdan kam bo'lishi shart",
+            message: "Soatlik chegirma narxi asosiy narxdan kam bo'lishi shart",
             path: ["discount_price_per_hour"],
         });
     }

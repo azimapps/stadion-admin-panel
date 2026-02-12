@@ -31,7 +31,7 @@ export default function DiscountsPage() {
             setData(response.items)
         } catch (error) {
             console.error(error)
-            toast.error("Chegirmalarni yuklashda xatolik yuz berdi")
+            toast.error("Umumiy chegirmalarni yuklashda xatolik yuz berdi")
         } finally {
             setLoading(false)
         }
@@ -44,7 +44,7 @@ export default function DiscountsPage() {
     const onAdd = async (values: any) => {
         try {
             await discountsService.create(values)
-            toast.success("Yangi chegirma qo'shildi")
+            toast.success("Yangi umumiy chegirma qo'shildi")
             fetchDiscounts()
         } catch (error) {
             console.error(error)
@@ -56,7 +56,7 @@ export default function DiscountsPage() {
     const onEdit = async (id: number, values: any) => {
         try {
             await discountsService.update(id, values)
-            toast.success("Chegirma yangilandi")
+            toast.success("Umumiy chegirma yangilandi")
             fetchDiscounts()
         } catch (error) {
             console.error(error)
@@ -68,7 +68,7 @@ export default function DiscountsPage() {
     const onDelete = async (id: number) => {
         try {
             await discountsService.delete(id)
-            toast.success("Chegirma o'chirildi")
+            toast.success("Umumiy chegirma o'chirildi")
             fetchDiscounts()
         } catch (error) {
             console.error(error)
@@ -83,13 +83,13 @@ export default function DiscountsPage() {
                 <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                     <div className="space-y-2">
                         <div className="flex items-center gap-3">
-                            <div className="size-12 rounded-[1.25rem] bg-primary/10 flex items-center justify-center shadow-inner">
-                                <Percent className="size-6 text-primary" />
+                            <div className="size-12 rounded-[1.25rem] bg-blue-500/10 flex items-center justify-center shadow-inner">
+                                <Percent className="size-6 text-blue-500" />
                             </div>
-                            <h1 className="text-4xl font-black italic tracking-tighter uppercase">Chegirmalar</h1>
+                            <h1 className="text-4xl font-black italic tracking-tighter uppercase">Umumiy Chegirmalar</h1>
                         </div>
                         <p className="text-sm font-medium text-muted-foreground/60 tracking-wide ml-1">
-                            Stadionlar uchun chegirmalarni shu yerdan boshqaring.
+                            Umumiy chegirmalar - butun bron uchun (barcha soatlarga) qo&apos;llanadi. Vaqt oralig&apos;ida faol.
                         </p>
                     </div>
                     <div className="flex items-center gap-4">
@@ -102,16 +102,16 @@ export default function DiscountsPage() {
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <List className="size-4 text-primary" />
-                            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Chegirmalar ro'yxati</h2>
+                            <List className="size-4 text-blue-500" />
+                            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Umumiy chegirmalar ro&apos;yxati</h2>
                         </div>
                     </div>
 
                     {loading ? (
                         <div className="flex h-64 items-center justify-center rounded-3xl bg-muted/20 animate-pulse border border-border/20">
                             <div className="flex flex-col items-center gap-4">
-                                <Percent className="size-10 text-primary opacity-20 animate-bounce" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/40">Yuklanmoqda...</span>
+                                <Percent className="size-10 text-blue-500 opacity-20 animate-bounce" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500/40">Yuklanmoqda...</span>
                             </div>
                         </div>
                     ) : (

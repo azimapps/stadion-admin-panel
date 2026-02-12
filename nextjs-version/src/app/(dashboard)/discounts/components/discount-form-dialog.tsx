@@ -111,9 +111,9 @@ export function DiscountFormDialog({
                 {trigger ? (
                     trigger
                 ) : (
-                    <Button className="h-11 px-6 rounded-xl font-bold text-sm gap-2 shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-95">
+                    <Button className="h-11 px-6 rounded-xl font-bold text-sm gap-2 shadow-xl shadow-blue-500/20 bg-blue-600 hover:bg-blue-700 transition-all hover:scale-[1.02] active:scale-95">
                         <Plus className="h-4 w-4" />
-                        Yangi chegirma
+                        Yangi umumiy chegirma
                     </Button>
                 )}
             </DialogTrigger>
@@ -121,9 +121,9 @@ export function DiscountFormDialog({
                 <DialogHeader className="p-10 pb-6">
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
-                            <DialogTitle className="text-2xl font-bold">{isEditing ? "Chegirmani tahrirlash" : "Yangi chegirma qo'shish"}</DialogTitle>
+                            <DialogTitle className="text-2xl font-bold">{isEditing ? "Umumiy chegirmani tahrirlash" : "Yangi umumiy chegirma qo'shish"}</DialogTitle>
                             <DialogDescription className="text-muted-foreground font-medium">
-                                Chegirma ma'lumotlarini to'ldiring. Stadium va vaqtni aniq belgilang.
+                                Umumiy chegirma - butun bron uchun qo&apos;llanadi (barcha soatlar uchun). Vaqt oralig&apos;ini belgilang.
                             </DialogDescription>
                         </div>
                         {isEditing && (
@@ -146,8 +146,8 @@ export function DiscountFormDialog({
                     onOpenChange={setShowDeleteConfirm}
                     onConfirm={handleDelete}
                     loading={loading}
-                    title="Chegirma o'chirilsinmi?"
-                    description={`Chegirmani o'chirmoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi.`}
+                    title="Umumiy chegirma o'chirilsinmi?"
+                    description={`Umumiy chegirmani o'chirmoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi.`}
                 />
 
                 <Form {...form}>
@@ -259,18 +259,19 @@ export function DiscountFormDialog({
                             name="discount_price_per_hour"
                             render={({ field }) => (
                                 <FormItem className="space-y-2">
-                                    <FormLabel className="text-sm font-medium text-muted-foreground ml-1">Chegirma narxi (soatiga UZS)</FormLabel>
+                                    <FormLabel className="text-sm font-medium text-muted-foreground ml-1">Umumiy chegirma narxi (soatiga UZS)</FormLabel>
                                     <FormControl>
                                         <div className="relative group">
-                                            <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-primary/40 group-focus-within:text-primary transition-all" />
+                                            <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-blue-500/40 group-focus-within:text-blue-500 transition-all" />
                                             <Input
                                                 type="number"
                                                 placeholder="0"
-                                                className="h-12 pl-12 rounded-xl bg-muted/20 border-border/40 font-medium text-base transition-all focus-visible:ring-primary/20"
+                                                className="h-12 pl-12 rounded-xl bg-muted/20 border-border/40 font-medium text-base transition-all focus-visible:ring-blue-500/20 text-blue-600"
                                                 {...field}
                                             />
                                         </div>
                                     </FormControl>
+                                    <p className="text-[10px] text-muted-foreground ml-1">Bu narx butun bron uchun (barcha soatlarga) qo&apos;llanadi</p>
                                     <FormMessage />
                                 </FormItem>
                             )}

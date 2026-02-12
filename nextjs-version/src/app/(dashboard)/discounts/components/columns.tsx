@@ -21,11 +21,12 @@ export const columns: ColumnDef<Discount>[] = [
     },
     {
         accessorKey: "discount_price_per_hour",
-        header: "Chegirma narxi",
+        header: "Umumiy chegirma narxi",
         cell: ({ row }) => {
             return (
-                <div className="font-medium">
+                <div className="font-bold text-blue-600">
                     {row.original.discount_price_per_hour.toLocaleString()} UZS
+                    <span className="text-[10px] text-muted-foreground font-normal ml-1">/soat</span>
                 </div>
             )
         }

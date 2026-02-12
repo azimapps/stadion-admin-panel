@@ -106,7 +106,7 @@ const data = {
           icon: Clock,
         },
         {
-          title: "Chegirmalar",
+          title: "Umumiy chegirmalar",
           url: "/discounts",
           icon: Percent,
         },

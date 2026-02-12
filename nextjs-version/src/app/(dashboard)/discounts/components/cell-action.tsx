@@ -26,7 +26,7 @@ export function CellAction({ data }: CellActionProps) {
 
     const onCopy = (id: string) => {
         navigator.clipboard.writeText(id)
-        toast.success("Chegirma ID nusxalandi.")
+        toast.success("Umumiy chegirma ID nusxalandi.")
     }
 
     return (

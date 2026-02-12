@@ -489,13 +489,13 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                         <FormItem>
                                             <FormLabel className="flex items-center gap-2">
                                                 <BadgeDollarSign className="size-3.5 text-emerald-500" />
-                                                Chegirma narxi (UZS)
+                                                Soatlik chegirma narxi (UZS)
                                             </FormLabel>
                                             <FormControl>
                                                 <Input type="number" step="1000" {...field} className="h-11 rounded-xl bg-background/50 border-border/50 text-emerald-600 font-bold" />
                                             </FormControl>
                                             <FormDescription className="text-[10px]">
-                                                Ixtiyoriy. Agar chegirma bo&apos;lsa kiriting.
+                                                Ixtiyoriy. Faqat soatlik narxga qo&apos;llanadi (har bir soat uchun alohida).
                                             </FormDescription>
                                             <FormMessage />
                                         </FormItem>
