@@ -76,6 +76,31 @@ export const columns: ColumnDef<Tournament>[] = [
         },
     },
     {
+        accessorKey: "min_players_per_team",
+        header: "O'yinchilar",
+        cell: ({ row }) => {
+            const min = row.original.min_players_per_team
+            const max = row.original.max_players_per_team
+            const total = row.original.max_players_tournament
+            return (
+                <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center gap-1">
+                        <Users className="size-3 text-muted-foreground" />
+                        <span className="text-xs font-bold">
+                            {min || "-"} - {max || "-"}
+                        </span>
+                        <span className="text-[9px] text-muted-foreground">/jamoa</span>
+                    </div>
+                    {total && (
+                        <span className="text-[10px] text-muted-foreground font-medium">
+                            Jami max: {total}
+                        </span>
+                    )}
+                </div>
+            )
+        },
+    },
+    {
         accessorKey: "is_active",
         header: "Holati",
         cell: ({ row }) => {

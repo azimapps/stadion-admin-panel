@@ -4,11 +4,10 @@ import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Trash2, Trophy, Plus, Calendar as CalendarIcon, MapPin, DollarSign, Clock, Users, Check } from "lucide-react"
-import { format, parseISO } from "date-fns"
+import { Trash2, Trophy, Plus, Calendar as CalendarIcon, MapPin, DollarSign, Clock, Users } from "lucide-react"
+import { format } from "date-fns"
 
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
@@ -31,7 +30,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { Tournament, TournamentCreate } from "@/services/tournament"
 import { Stadium, stadiumsService } from "@/services/stadium"
-import { Team, teamService } from "@/services/team"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog"
 import {
@@ -52,7 +50,9 @@ const tournamentFormSchema = z.object({
     start_time: z.string().min(1, { message: "Boshlanish vaqtini tanlang." }),
     end_time: z.string().min(1, { message: "Tugash vaqtini tanlang." }),
     entrance_fee: z.coerce.number().min(0),
-    team_ids: z.array(z.number()).default([]),
+    min_players_per_team: z.coerce.number().nullable().optional(),
+    max_players_per_team: z.coerce.number().nullable().optional(),
+    max_players_tournament: z.coerce.number().nullable().optional(),
 })
 
 type TournamentFormValues = z.infer<typeof tournamentFormSchema>
@@ -78,7 +78,6 @@ export function TournamentFormDialog({
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const [stadiums, setStadiums] = useState<Stadium[]>([])
-    const [teams, setTeams] = useState<Team[]>([])
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
     const form = useForm<any>({
@@ -92,7 +91,9 @@ export function TournamentFormDialog({
             start_time: tournament?.start_time ? new Date(tournament.start_time).toISOString().slice(0, 16) : "",
             end_time: tournament?.end_time ? new Date(tournament.end_time).toISOString().slice(0, 16) : "",
             entrance_fee: tournament?.entrance_fee || 0,
-            team_ids: tournament?.team_ids || [],
+            min_players_per_team: tournament?.min_players_per_team || null,
+            max_players_per_team: tournament?.max_players_per_team || null,
+            max_players_tournament: tournament?.max_players_tournament || null,
         },
     })
 
@@ -101,7 +102,6 @@ export function TournamentFormDialog({
             if (!fixedStadiumId) {
                 stadiumsService.getAll().then(setStadiums).catch(console.error)
             }
-            teamService.getAll().then(setTeams).catch(console.error)
         }
     }, [open, fixedStadiumId])
 
@@ -521,76 +521,84 @@ export function TournamentFormDialog({
                         </Tabs>
 
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <FormLabel className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-primary/80">
-                                    <Users className="size-4" />
-                                    Ishtirokchi jamoalar
-                                </FormLabel>
-                                <Badge variant="outline" className="rounded-full px-3 py-1 bg-primary/5 text-primary border-primary/20">
-                                    {form.watch("team_ids")?.length || 0} ta tanlandi
-                                </Badge>
-                            </div>
+                            <FormLabel className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-primary/80">
+                                <Users className="size-4" />
+                                O'yinchilar limiti
+                            </FormLabel>
 
-                            <FormField
-                                control={form.control}
-                                name="team_ids"
-                                render={({ field }) => (
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                                        {teams.map((team) => {
-                                            const isChecked = Array.isArray(field.value) && field.value.includes(team.id);
-                                            return (
-                                                <div
-                                                    key={team.id}
-                                                    onClick={() => {
-                                                        const current = Array.isArray(field.value) ? field.value : [];
-                                                        const newValue = isChecked
-                                                            ? current.filter(id => id !== team.id)
-                                                            : [...current, team.id];
-                                                        field.onChange(newValue);
-                                                    }}
-                                                    className={cn(
-                                                        "group relative flex flex-col items-center gap-3 p-4 rounded-2xl border transition-all duration-300 cursor-pointer select-none",
-                                                        isChecked
-                                                            ? "bg-primary/10 border-primary shadow-lg shadow-primary/10 scale-105 z-10"
-                                                            : "bg-muted/10 border-border/40 hover:border-primary/40 hover:bg-muted/20"
-                                                    )}
-                                                >
-                                                    <div className={cn(
-                                                        "relative size-14 rounded-full overflow-hidden border-2 transition-transform duration-500",
-                                                        isChecked ? "border-primary scale-110 rotate-3" : "border-border/60 group-hover:scale-105"
-                                                    )}>
-                                                        {team.logo_url ? (
-                                                            <img src={team.logo_url} alt="" className="size-full object-cover" />
-                                                        ) : (
-                                                            <div className="size-full bg-muted flex items-center justify-center">
-                                                                <Users className="size-6 text-muted-foreground/30" />
-                                                            </div>
-                                                        )}
-                                                        {isChecked && (
-                                                            <div className="absolute inset-0 bg-primary/20 flex items-center justify-center backdrop-blur-[1px]">
-                                                                <div className="bg-primary text-white rounded-full p-1 shadow-lg">
-                                                                    <Check className="size-3" strokeWidth={4} />
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <div className="text-center space-y-0.5">
-                                                        <p className={cn(
-                                                            "text-xs font-bold transition-colors line-clamp-1",
-                                                            isChecked ? "text-primary" : "text-foreground"
-                                                        )}>
-                                                            {team.name_uz}
-                                                        </p>
-                                                        <p className="text-[9px] font-medium text-muted-foreground opacity-60">
-                                                            ID: {team.id}
-                                                        </p>
-                                                    </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="min_players_per_team"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-2">
+                                            <FormLabel className="text-sm font-medium text-muted-foreground ml-1">Min o'yinchilar (jamoa)</FormLabel>
+                                            <FormControl>
+                                                <div className="relative group">
+                                                    <Users className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-primary/40 group-focus-within:text-primary transition-all" />
+                                                    <Input
+                                                        type="number"
+                                                        placeholder="Chegarasiz"
+                                                        className="h-12 pl-12 rounded-xl bg-muted/20 border-border/40 font-medium text-base transition-all focus-visible:ring-primary/20"
+                                                        {...field}
+                                                        value={field.value ?? ""}
+                                                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                                                    />
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <FormField
+                                    control={form.control}
+                                    name="max_players_per_team"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-2">
+                                            <FormLabel className="text-sm font-medium text-muted-foreground ml-1">Max o'yinchilar (jamoa)</FormLabel>
+                                            <FormControl>
+                                                <div className="relative group">
+                                                    <Users className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-primary/40 group-focus-within:text-primary transition-all" />
+                                                    <Input
+                                                        type="number"
+                                                        placeholder="Chegarasiz"
+                                                        className="h-12 pl-12 rounded-xl bg-muted/20 border-border/40 font-medium text-base transition-all focus-visible:ring-primary/20"
+                                                        {...field}
+                                                        value={field.value ?? ""}
+                                                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                                                    />
+                                                </div>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <FormField
+                                    control={form.control}
+                                    name="max_players_tournament"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-2">
+                                            <FormLabel className="text-sm font-medium text-muted-foreground ml-1">Max jami ishtirokchilar</FormLabel>
+                                            <FormControl>
+                                                <div className="relative group">
+                                                    <Users className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-primary/40 group-focus-within:text-primary transition-all" />
+                                                    <Input
+                                                        type="number"
+                                                        placeholder="Chegarasiz"
+                                                        className="h-12 pl-12 rounded-xl bg-muted/20 border-border/40 font-medium text-base transition-all focus-visible:ring-primary/20"
+                                                        {...field}
+                                                        value={field.value ?? ""}
+                                                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                                                    />
+                                                </div>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
                         </div>
                     </form>
                 </Form>

@@ -1,6 +1,6 @@
 import Cookies from 'js-cookie';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://stadio-backend-pythoon-production.up.railway.app';
 
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -50,11 +50,21 @@ class ApiClient {
       requestHeaders['Content-Type'] = 'application/json';
     }
 
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method,
-      headers: requestHeaders,
-      body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
-    });
+    let response: Response;
+    const url = `${this.baseUrl}${endpoint}`;
+
+    try {
+      response = await fetch(url, {
+        method,
+        headers: requestHeaders,
+        body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
+      });
+    } catch (error) {
+      // Network error (CORS, offline, etc.)
+      console.error('API Request failed to:', url);
+      console.error('Error:', error);
+      throw new Error('Server bilan bog\'lanishda xatolik. Internet aloqangizni tekshiring.');
+    }
 
     // Handle 401 Unauthorized - auto logout
     if (response.status === 401) {

@@ -12,8 +12,9 @@ export interface Tournament {
     start_time: string;
     end_time: string;
     entrance_fee: number;
-    team_ids?: number[];
-    teams?: any[]; // For the response which includes team objects
+    min_players_per_team: number | null;
+    max_players_per_team: number | null;
+    max_players_tournament: number | null;
     is_active: boolean;
     created_at: string;
     updated_at: string;
@@ -29,7 +30,9 @@ export interface TournamentCreate {
     start_time: string;
     end_time: string;
     entrance_fee?: number;
-    team_ids?: number[];
+    min_players_per_team?: number | null;
+    max_players_per_team?: number | null;
+    max_players_tournament?: number | null;
 }
 
 export const tournamentService = {
