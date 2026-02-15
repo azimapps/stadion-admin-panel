@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/dialog"
 import { CAPACITY_TYPES, METRO_STATIONS, ROOF_TYPES, SURFACE_TYPES } from "./stadium-constants"
 import { uploadService } from "@/services/upload"
+import { compressImage } from "@/lib/image-compressor"
 import {
     Loader2,
     Plus,
@@ -228,35 +229,44 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
         }
     }
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, fieldName: "main_image" | "images") => {
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: "main_image" | "images") => {
         if (!e.target.files?.length) return
 
-        const validFiles = Array.from(e.target.files).filter(file => {
-            if (file.size > 500 * 1024) {
-                setErrorMessage(`"${file.name}" fayl hajmi 500KB dan oshmasligi kerak!`);
-                setShowErrorDialog(true);
-                return false;
-            }
-            return true;
-        });
+        const files = Array.from(e.target.files);
+        setUploading(true);
 
-        if (validFiles.length === 0) return
+        try {
+            // Compress all files that are too large
+            const processedFiles = await Promise.all(
+                files.map(async (file) => {
+                    if (file.size > 500 * 1024) {
+                        toast.info(`"${file.name}" siqilmoqda...`);
+                        return await compressImage(file, 500);
+                    }
+                    return file;
+                })
+            );
 
-        const files = validFiles;
-
-        if (fieldName === "main_image") {
-            const file = files[0];
-            const previewUrl = URL.createObjectURL(file);
-            fileMap.current.set(previewUrl, file);
-            form.setValue("main_image", previewUrl, { shouldValidate: true });
-        } else {
-            const newImages = files.map(file => {
+            if (fieldName === "main_image") {
+                const file = processedFiles[0];
                 const previewUrl = URL.createObjectURL(file);
                 fileMap.current.set(previewUrl, file);
-                return previewUrl;
-            });
-            const currentImages = form.getValues("images") || [];
-            form.setValue("images", [...currentImages, ...newImages], { shouldValidate: true });
+                form.setValue("main_image", previewUrl, { shouldValidate: true });
+            } else {
+                const newImages = processedFiles.map(file => {
+                    const previewUrl = URL.createObjectURL(file);
+                    fileMap.current.set(previewUrl, file);
+                    return previewUrl;
+                });
+                const currentImages = form.getValues("images") || [];
+                form.setValue("images", [...currentImages, ...newImages], { shouldValidate: true });
+            }
+        } catch (error) {
+            console.error("Image compression failed:", error);
+            setErrorMessage("Rasmni siqishda xatolik yuz berdi. Boshqa rasm tanlang.");
+            setShowErrorDialog(true);
+        } finally {
+            setUploading(false);
         }
     }
 
