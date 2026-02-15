@@ -22,16 +22,16 @@ export function SignupForm2({
         <div className="grid grid-cols-2 gap-3">
           <div className="grid gap-3">
             <Label htmlFor="firstName">First Name</Label>
-            <Input id="firstName" placeholder="John" required />
+            <Input id="firstName" placeholder="" required />
           </div>
           <div className="grid gap-3">
             <Label htmlFor="lastName">Last Name</Label>
-            <Input id="lastName" placeholder="Doe" required />
+            <Input id="lastName" placeholder="" required />
           </div>
         </div>
         <div className="grid gap-3">
           <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" placeholder="m@example.com" required />
+          <Input id="email" type="email" placeholder="" required />
         </div>
         <div className="grid gap-3">
           <Label htmlFor="password">Password</Label>

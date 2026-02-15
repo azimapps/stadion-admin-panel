@@ -83,8 +83,8 @@ export default function DiscountsPage() {
                 <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                     <div className="space-y-2">
                         <div className="flex items-center gap-3">
-                            <div className="size-12 rounded-[1.25rem] bg-blue-500/10 flex items-center justify-center shadow-inner">
-                                <Percent className="size-6 text-blue-500" />
+                            <div className="size-12 rounded-[1.25rem] bg-green-500/10 flex items-center justify-center shadow-inner">
+                                <Percent className="size-6 text-green-500" />
                             </div>
                             <h1 className="text-4xl font-black italic tracking-tighter uppercase">Umumiy Chegirmalar</h1>
                         </div>
@@ -102,7 +102,7 @@ export default function DiscountsPage() {
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <List className="size-4 text-blue-500" />
+                            <List className="size-4 text-green-500" />
                             <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Umumiy chegirmalar ro&apos;yxati</h2>
                         </div>
                     </div>
@@ -110,8 +110,8 @@ export default function DiscountsPage() {
                     {loading ? (
                         <div className="flex h-64 items-center justify-center rounded-3xl bg-muted/20 animate-pulse border border-border/20">
                             <div className="flex flex-col items-center gap-4">
-                                <Percent className="size-10 text-blue-500 opacity-20 animate-bounce" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500/40">Yuklanmoqda...</span>
+                                <Percent className="size-10 text-green-500 opacity-20 animate-bounce" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-green-500/40">Yuklanmoqda...</span>
                             </div>
                         </div>
                     ) : (

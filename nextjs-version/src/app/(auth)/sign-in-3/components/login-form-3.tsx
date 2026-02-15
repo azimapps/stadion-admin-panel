@@ -38,8 +38,7 @@ export function LoginForm3({
                 <Input
                   id="email"
                   type="email"
-                  placeholder="test@example.com"
-                  defaultValue="test@example.com"
+                  placeholder=""
                   required
                 />
               </div>
@@ -53,7 +52,7 @@ export function LoginForm3({
                     Forgot your password?
                   </a>
                 </div>
-                <Input id="password" type="password" defaultValue="password" required />
+                <Input id="password" type="password" required />
               </div>
               <Button type="submit" className="w-full cursor-pointer">
                 Login

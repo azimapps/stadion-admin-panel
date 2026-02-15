@@ -24,7 +24,7 @@ export const columns: ColumnDef<Discount>[] = [
         header: "Umumiy chegirma narxi",
         cell: ({ row }) => {
             return (
-                <div className="font-bold text-blue-600">
+                <div className="font-bold text-green-600">
                     {row.original.discount_price_per_hour.toLocaleString()} UZS
                     <span className="text-[10px] text-muted-foreground font-normal ml-1">/soat</span>
                 </div>

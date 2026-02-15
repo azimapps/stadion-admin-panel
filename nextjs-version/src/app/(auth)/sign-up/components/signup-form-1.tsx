@@ -80,7 +80,7 @@ export function SignupForm1({
                         <FormItem>
                           <FormLabel>First Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="John" {...field} />
+                            <Input placeholder="" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -93,7 +93,7 @@ export function SignupForm1({
                         <FormItem>
                           <FormLabel>Last Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Doe" {...field} />
+                            <Input placeholder="" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -109,7 +109,7 @@ export function SignupForm1({
                         <FormControl>
                           <Input
                             type="email"
-                            placeholder="m@example.com"
+                            placeholder=""
                             {...field}
                           />
                         </FormControl>

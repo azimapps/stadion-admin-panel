@@ -111,7 +111,7 @@ export function DiscountFormDialog({
                 {trigger ? (
                     trigger
                 ) : (
-                    <Button className="h-11 px-6 rounded-xl font-bold text-sm gap-2 shadow-xl shadow-blue-500/20 bg-blue-600 hover:bg-blue-700 transition-all hover:scale-[1.02] active:scale-95">
+                    <Button className="h-11 px-6 rounded-xl font-bold text-sm gap-2 shadow-xl shadow-green-500/20 bg-green-600 hover:bg-green-700 transition-all hover:scale-[1.02] active:scale-95">
                         <Plus className="h-4 w-4" />
                         Yangi umumiy chegirma
                     </Button>
@@ -262,11 +262,11 @@ export function DiscountFormDialog({
                                     <FormLabel className="text-sm font-medium text-muted-foreground ml-1">Umumiy chegirma narxi (soatiga UZS)</FormLabel>
                                     <FormControl>
                                         <div className="relative group">
-                                            <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-blue-500/40 group-focus-within:text-blue-500 transition-all" />
+                                            <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-green-500/40 group-focus-within:text-green-500 transition-all" />
                                             <Input
                                                 type="number"
                                                 placeholder="0"
-                                                className="h-12 pl-12 rounded-xl bg-muted/20 border-border/40 font-medium text-base transition-all focus-visible:ring-blue-500/20 text-blue-600"
+                                                className="h-12 pl-12 rounded-xl bg-muted/20 border-border/40 font-medium text-base transition-all focus-visible:ring-green-500/20 text-green-600"
                                                 {...field}
                                             />
                                         </div>

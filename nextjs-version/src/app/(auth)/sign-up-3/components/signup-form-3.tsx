@@ -39,7 +39,7 @@ export function SignupForm3({
                   <Label htmlFor="firstName">First Name</Label>
                   <Input
                     id="firstName"
-                    placeholder="John"
+                    placeholder=""
                     required
                   />
                 </div>
@@ -47,7 +47,7 @@ export function SignupForm3({
                   <Label htmlFor="lastName">Last Name</Label>
                   <Input
                     id="lastName"
-                    placeholder="Doe"
+                    placeholder=""
                     required
                   />
                 </div>
@@ -57,7 +57,7 @@ export function SignupForm3({
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder=""
                   required
                 />
               </div>
