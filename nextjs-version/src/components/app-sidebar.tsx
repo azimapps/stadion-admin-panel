@@ -2,18 +2,7 @@
 
 import * as React from "react"
 import {
-  LayoutPanelLeft,
   LayoutDashboard,
-  Mail,
-  CheckSquare,
-  MessageCircle,
-  Calendar,
-  Shield,
-  AlertTriangle,
-  Settings,
-  HelpCircle,
-  CreditCard,
-  LayoutTemplate,
   Users,
   UserCircle,
   MapPin,
@@ -89,11 +78,6 @@ const data = {
           title: "Qulayliklar",
           url: "/comforts",
           icon: Wifi,
-        },
-        {
-          title: "Jamoalar",
-          url: "/teams",
-          icon: Shield,
         },
         {
           title: "Regionlar",
