@@ -9,9 +9,10 @@ import {
   Map as MapIcon,
   Video,
   Trophy,
-  Wifi,
   Percent,
   Clock,
+  ShieldCheck,
+  Wifi,
 } from "lucide-react"
 import Link from "next/link"
 import { Logo } from "@/components/logo"
@@ -93,6 +94,11 @@ const data = {
           title: "Umumiy chegirmalar",
           url: "/discounts",
           icon: Percent,
+        },
+        {
+          title: "Hujjatlar",
+          url: "/legal",
+          icon: ShieldCheck,
         },
       ],
     },
