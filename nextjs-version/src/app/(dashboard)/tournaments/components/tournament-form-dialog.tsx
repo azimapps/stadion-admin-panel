@@ -32,6 +32,7 @@ import { Tournament, TournamentCreate } from "@/services/tournament"
 import { Stadium, stadiumsService } from "@/services/stadium"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog"
+import { ImageUpload } from "@/components/ui/image-upload"
 import {
     Select,
     SelectContent,
@@ -53,6 +54,7 @@ const tournamentFormSchema = z.object({
     min_players_per_team: z.coerce.number().nullable().optional(),
     max_players_per_team: z.coerce.number().nullable().optional(),
     max_players_tournament: z.coerce.number().nullable().optional(),
+    cover_image: z.string().nullable().optional(),
 })
 
 type TournamentFormValues = z.infer<typeof tournamentFormSchema>
@@ -94,6 +96,7 @@ export function TournamentFormDialog({
             min_players_per_team: tournament?.min_players_per_team || null,
             max_players_per_team: tournament?.max_players_per_team || null,
             max_players_tournament: tournament?.max_players_tournament || null,
+            cover_image: tournament?.cover_image || null,
         },
     })
 
@@ -180,6 +183,26 @@ export function TournamentFormDialog({
 
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 overflow-y-auto p-10 pt-2 space-y-10 custom-scrollbar">
+                        <FormField
+                            control={form.control}
+                            name="cover_image"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-col items-center justify-center space-y-4 mb-4">
+                                    <FormLabel className="text-sm font-bold uppercase tracking-wider text-primary/80">Turnir muqovasi</FormLabel>
+                                    <FormControl>
+                                        <div className="flex justify-center w-full">
+                                            <ImageUpload
+                                                value={field.value || ""}
+                                                onChange={field.onChange}
+                                                folder="tournaments"
+                                            />
+                                        </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
                         {!fixedStadiumId && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <FormField

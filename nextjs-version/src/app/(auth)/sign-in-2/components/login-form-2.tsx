@@ -20,7 +20,7 @@ export function LoginForm2({
       <div className="grid gap-6">
         <div className="grid gap-3">
           <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" placeholder="" required />
+          <Input id="email" name="email" type="email" placeholder="" autoComplete="username" required />
         </div>
         <div className="grid gap-3">
           <div className="flex items-center">
@@ -32,7 +32,7 @@ export function LoginForm2({
               Forgot your password?
             </a>
           </div>
-          <Input id="password" type="password" required />
+          <Input id="password" name="password" type="password" autoComplete="current-password" required />
         </div>
         <Button type="submit" className="w-full cursor-pointer">
           Login

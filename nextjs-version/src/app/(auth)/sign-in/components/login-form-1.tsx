@@ -98,6 +98,7 @@ export function LoginForm1({
                           <Input
                             type="email"
                             placeholder=""
+                            autoComplete="username"
                             {...field}
                             disabled={isLoading}
                           />
@@ -115,7 +116,7 @@ export function LoginForm1({
                           <FormLabel>Parol</FormLabel>
                         </div>
                         <FormControl>
-                          <Input type="password" {...field} disabled={isLoading} />
+                          <Input type="password" {...field} disabled={isLoading} autoComplete="current-password" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

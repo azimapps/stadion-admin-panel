@@ -15,10 +15,22 @@ export const columns: ColumnDef<Tournament>[] = [
         cell: ({ row }) => {
             const title_uz = row.getValue("title_uz") as string
             const title_ru = row.original.title_ru
+            const cover = row.original.cover_image
             return (
-                <div className="flex flex-col gap-0.5 min-w-[200px]">
-                    <span className="font-bold text-sm tracking-tight text-foreground line-clamp-1 italic uppercase">{title_uz}</span>
-                    <span className="text-[10px] text-muted-foreground font-medium line-clamp-1 opacity-60 uppercase">{title_ru}</span>
+                <div className="flex items-center gap-3 min-w-[200px]">
+                    {cover ? (
+                        <div className="size-10 shrink-0 overflow-hidden rounded-lg border border-border/50 bg-muted/20 shadow-sm">
+                            <img src={cover} alt={title_uz} className="h-full w-full object-cover transition-all hover:scale-110" />
+                        </div>
+                    ) : (
+                        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border/50 bg-muted/20 shadow-sm">
+                            <Trophy className="size-4 text-primary/30" />
+                        </div>
+                    )}
+                    <div className="flex flex-col gap-0.5">
+                        <span className="font-bold text-sm tracking-tight text-foreground line-clamp-1 italic uppercase">{title_uz}</span>
+                        <span className="text-[10px] text-muted-foreground font-medium line-clamp-1 opacity-60 uppercase">{title_ru}</span>
+                    </div>
                 </div>
             )
         },

@@ -37,8 +37,10 @@ export function LoginForm3({
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder=""
+                  autoComplete="username"
                   required
                 />
               </div>
@@ -52,7 +54,7 @@ export function LoginForm3({
                     Forgot your password?
                   </a>
                 </div>
-                <Input id="password" type="password" required />
+                <Input id="password" name="password" type="password" autoComplete="current-password" required />
               </div>
               <Button type="submit" className="w-full cursor-pointer">
                 Login

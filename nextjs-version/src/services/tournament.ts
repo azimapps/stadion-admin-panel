@@ -15,6 +15,7 @@ export interface Tournament {
     min_players_per_team: number | null;
     max_players_per_team: number | null;
     max_players_tournament: number | null;
+    cover_image: string | null;
     is_active: boolean;
     created_at: string;
     updated_at: string;
@@ -33,6 +34,7 @@ export interface TournamentCreate {
     min_players_per_team?: number | null;
     max_players_per_team?: number | null;
     max_players_tournament?: number | null;
+    cover_image?: string | null;
 }
 
 export const tournamentService = {
