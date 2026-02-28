@@ -131,7 +131,7 @@ export function TimetableForm() {
                                     <SelectItem
                                         key={stadium.id}
                                         value={stadium.id.toString()}
-                                        className="rounded-xl py-3 px-4 focus:bg-primary focus:text-white transition-all cursor-pointer mb-1 last:mb-0"
+                                        className="rounded-xl py-3 px-4 focus:bg-primary focus:text-primary-foreground transition-all cursor-pointer mb-1 last:mb-0"
                                     >
                                         <span className="font-bold">{stadium.name_uz}</span>
                                     </SelectItem>
@@ -248,20 +248,20 @@ export function TimetableForm() {
                                             className={cn(
                                                 "relative h-16 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center justify-center gap-1 group overflow-hidden",
                                                 isSelected
-                                                    ? "bg-primary border-primary text-white shadow-lg shadow-primary/20 scale-105 z-10 active:scale-95"
+                                                    ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105 z-10 active:scale-95"
                                                     : "bg-muted/10 border-border/40 hover:border-primary/40 hover:bg-muted/20 active:scale-95"
                                             )}
                                         >
                                             <span className={cn(
                                                 "text-lg font-black tracking-tighter transition-colors",
-                                                isSelected ? "text-white" : "text-foreground/80 group-hover:text-primary"
+                                                isSelected ? "text-primary-foreground" : "text-foreground/80 group-hover:text-primary"
                                             )}>
                                                 {hour.toString().padStart(2, '0')}:00
                                             </span>
                                             {isSelected && (
                                                 <div className="absolute top-1 right-1">
-                                                    <div className="size-3 rounded-full bg-white/20 flex items-center justify-center">
-                                                        <Check className="size-2 text-white" strokeWidth={4} />
+                                                    <div className="size-3 rounded-full bg-primary-foreground/20 flex items-center justify-center">
+                                                        <Check className="size-2 text-primary-foreground" strokeWidth={4} />
                                                     </div>
                                                 </div>
                                             )}

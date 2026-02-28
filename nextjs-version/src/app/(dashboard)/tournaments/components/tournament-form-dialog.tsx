@@ -226,7 +226,7 @@ export function TournamentFormDialog({
                                                         <SelectItem
                                                             key={stadium.id}
                                                             value={stadium.id.toString()}
-                                                            className="rounded-lg py-2 px-3 focus:bg-primary focus:text-white transition-colors cursor-pointer mb-1 last:mb-0"
+                                                            className="rounded-lg py-2 px-3 focus:bg-primary focus:text-primary-foreground transition-colors cursor-pointer mb-1 last:mb-0"
                                                         >
                                                             <div className="flex items-center justify-between w-full gap-8">
                                                                 <span className="text-sm font-medium">{stadium.name_uz}</span>
