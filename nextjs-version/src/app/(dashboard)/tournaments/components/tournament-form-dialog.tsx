@@ -195,6 +195,7 @@ export function TournamentFormDialog({
                                                 value={field.value || ""}
                                                 onChange={field.onChange}
                                                 folder="tournaments"
+                                                aspectRatio={16 / 9}
                                             />
                                         </div>
                                     </FormControl>

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { uploadService } from "@/services/upload"
 import { toast } from "sonner"
+import { compressAndFormatImage } from "@/lib/image-utils"
 
 interface ImageUploadProps {
     value?: string
@@ -13,6 +14,7 @@ interface ImageUploadProps {
     disabled?: boolean
     folder?: string
     className?: string
+    aspectRatio?: number
 }
 
 export function ImageUpload({
@@ -21,6 +23,7 @@ export function ImageUpload({
     disabled,
     folder = "general",
     className,
+    aspectRatio,
 }: ImageUploadProps) {
     const [uploading, setUploading] = useState(false)
 
@@ -28,16 +31,20 @@ export function ImageUpload({
         const file = e.target.files?.[0]
         if (!file) return
 
-        if (file.size > 5 * 1024 * 1024) {
-            toast.error("Fayl hajmi 5MB dan oshmasligi kerak")
+        if (file.size > 20 * 1024 * 1024) {
+            toast.error("Fayl hajmi juda katta (Max 20MB)")
             return
         }
 
         try {
             setUploading(true)
-            const result = await uploadService.uploadImage(file, folder)
+
+            // Compress to MAX (min size): 800px max width/height and 50% quality for tiny file sizes (e.g., ~15-30kb)
+            const processedFile = await compressAndFormatImage(file, aspectRatio, 800, 0.5)
+
+            const result = await uploadService.uploadImage(processedFile, folder)
             onChange(result.url)
-            toast.success("Rasm yuklandi")
+            toast.success("Rasm yuklandi va formatlandi")
         } catch (error: any) {
             toast.error("Rasm yuklashda xatolik: " + (error.message || "Noma'lum xatolik"))
         } finally {
@@ -52,7 +59,8 @@ export function ImageUpload({
     return (
         <div className={cn("flex items-center gap-4", className)}>
             <div className={cn(
-                "relative group aspect-square h-32 w-32 rounded-xl border-2 border-dashed transition-all flex flex-col items-center justify-center overflow-hidden",
+                "relative group rounded-xl border-2 border-dashed transition-all flex flex-col items-center justify-center overflow-hidden",
+                aspectRatio === 16 / 9 ? "w-64 aspect-video" : "aspect-square h-32 w-32",
                 value ? "border-border" : "border-muted-foreground/25 hover:border-primary/50 bg-muted/50 hover:bg-muted/80",
                 uploading && "opacity-50 cursor-not-allowed"
             )}>
