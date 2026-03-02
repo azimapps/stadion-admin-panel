@@ -1,4 +1,4 @@
-import { lazy } from 'react'
+import React, { lazy } from 'react'
 import { Navigate } from 'react-router-dom'
 
 // Lazy load components for better performance
