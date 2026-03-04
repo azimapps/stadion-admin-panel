@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Bell, Send, Search, Check, ChevronsUpDown, User, X, Loader2 } from "lucide-react"
+import { Bell, Send, Search, ChevronsUpDown, User, X, Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -238,9 +238,6 @@ export default function NotificationsPage() {
                                                                                     <p className="text-xs text-muted-foreground">{user.phone}</p>
                                                                                 </div>
                                                                             </div>
-                                                                            {selectedUser?.id === user.id && (
-                                                                                <Check className="ml-auto size-4" />
-                                                                            )}
                                                                         </CommandItem>
                                                                     ))}
                                                                 </CommandGroup>
