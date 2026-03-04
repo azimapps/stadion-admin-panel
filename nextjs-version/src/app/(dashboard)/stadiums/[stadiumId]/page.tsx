@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Check, X, MapPin, Phone, Banknote, Users, Layers, Umbrella, Image as ImageIcon, ArrowLeft, Pencil, FileText, ExternalLink } from "lucide-react"
+import { Check, X, MapPin, Phone, Banknote, Users, Layers, Umbrella, Image as ImageIcon, ArrowLeft, Pencil, FileText, ExternalLink, Calendar as CalendarIcon2 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner" // Assuming sonner is used based on other files
 import { Loader2 } from "lucide-react"
@@ -128,6 +128,16 @@ export default function StadiumDetailsPage() {
                     <h1 className="text-2xl font-bold tracking-tight">Stadion haqida</h1>
                 </div>
                 <div className="flex items-center gap-3">
+                    <Button variant="outline" className="gap-2" asChild>
+                        <Link href={`/stadiums/${data.id}/finance`}>
+                            <Banknote className="h-4 w-4" /> Moliya
+                        </Link>
+                    </Button>
+                    <Button variant="outline" className="gap-2" asChild>
+                        <Link href={`/stadiums/${data.id}/schedule`}>
+                            <CalendarIcon2 className="h-4 w-4" /> Jadval
+                        </Link>
+                    </Button>
                     <TournamentFormDialog
                         fixedStadiumId={data.id}
                         onAddTournament={handleAddTournament}
