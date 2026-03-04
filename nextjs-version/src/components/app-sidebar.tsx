@@ -13,6 +13,7 @@ import {
   Clock,
   ShieldCheck,
   Wifi,
+  Bell,
 } from "lucide-react"
 import Link from "next/link"
 import { Logo } from "@/components/logo"
@@ -94,6 +95,11 @@ const data = {
           title: "Umumiy chegirmalar",
           url: "/discounts",
           icon: Percent,
+        },
+        {
+          title: "Bildirishnomalar",
+          url: "/notifications",
+          icon: Bell,
         },
         {
           title: "Hujjatlar",
