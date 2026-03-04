@@ -90,6 +90,26 @@ export default function StadiumFinancePage() {
         fetchData()
     }, [fetchData])
 
+    // Build full month chart data (fill missing days with 0)
+    const fullMonthDaily = React.useMemo(() => {
+        const daysInMonth = new Date(year, month, 0).getDate()
+        const dailyMap = new Map(
+            (data?.daily || []).map(d => [d.date, d])
+        )
+        return Array.from({ length: daysInMonth }, (_, i) => {
+            const day = String(i + 1).padStart(2, "0")
+            const dateStr = `${year}-${String(month).padStart(2, "0")}-${day}`
+            return dailyMap.get(dateStr) || {
+                date: dateStr,
+                income: 0,
+                booking_income: 0,
+                tournament_income: 0,
+                expenses: 0,
+                profit: 0,
+            }
+        })
+    }, [data?.daily, month, year])
+
     const handlePrevMonth = () => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))
     const handleNextMonth = () => {
         if (isFutureMonth) return
@@ -278,7 +298,7 @@ export default function StadiumFinancePage() {
                             config={chartConfig}
                             className="aspect-auto h-[250px] w-full"
                         >
-                            <AreaChart data={data.daily}>
+                            <AreaChart data={fullMonthDaily}>
                                 <defs>
                                     <linearGradient id="fillIncome" x1="0" y1="0" x2="0" y2="1">
                                         <stop
