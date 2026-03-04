@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
+import { Bar, ComposedChart, Line, CartesianGrid, XAxis, YAxis } from "recharts"
 import { format } from "date-fns"
 import { toast } from "sonner"
 import {
@@ -20,7 +20,7 @@ import {
     Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle,
 } from "@/components/ui/card"
 import {
-    type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent,
+    type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent,
 } from "@/components/ui/chart"
 import {
     Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
@@ -40,13 +40,23 @@ const MONTHS_UZ = [
 const chartConfig = {
     income: {
         label: "Daromad",
-        color: "var(--color-chart-1)",
+        color: "#22c55e",
     },
     expenses: {
         label: "Xarajatlar",
-        color: "var(--color-chart-5)",
+        color: "#ef4444",
+    },
+    profit: {
+        label: "Sof foyda",
+        color: "#3b82f6",
     },
 } satisfies ChartConfig
+
+const formatAxisUZS = (value: number) => {
+    if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
+    if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`
+    return String(value)
+}
 
 const formatUZS = (num: number = 0) => new Intl.NumberFormat('ru-RU').format(num) + ' UZS'
 
@@ -267,21 +277,11 @@ export default function StadiumFinancePage() {
                 <Card className="@container/card">
                     <CardHeader>
                         <CardTitle>Kunlik daromad va xarajatlar</CardTitle>
-                        <CardDescription>{displayMonthYear}</CardDescription>
+                        <CardDescription>{displayMonthYear} — daromad, xarajat va sof foyda</CardDescription>
                     </CardHeader>
                     <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-                        <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">
-                            <AreaChart data={data.daily}>
-                                <defs>
-                                    <linearGradient id="fillIncome" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="var(--color-income)" stopOpacity={0.8} />
-                                        <stop offset="95%" stopColor="var(--color-income)" stopOpacity={0.1} />
-                                    </linearGradient>
-                                    <linearGradient id="fillExpenses" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="var(--color-expenses)" stopOpacity={0.8} />
-                                        <stop offset="95%" stopColor="var(--color-expenses)" stopOpacity={0.1} />
-                                    </linearGradient>
-                                </defs>
+                        <ChartContainer config={chartConfig} className="aspect-auto h-[300px] w-full">
+                            <ComposedChart data={data.daily} barGap={2}>
                                 <CartesianGrid vertical={false} />
                                 <XAxis
                                     dataKey="date"
@@ -294,35 +294,46 @@ export default function StadiumFinancePage() {
                                         return `${d.getDate()}-${MONTHS_UZ[d.getMonth()].slice(0, 3)}`
                                     }}
                                 />
+                                <YAxis
+                                    tickLine={false}
+                                    axisLine={false}
+                                    tickMargin={8}
+                                    width={55}
+                                    tickFormatter={formatAxisUZS}
+                                />
                                 <ChartTooltip
-                                    cursor={false}
                                     content={
                                         <ChartTooltipContent
                                             labelFormatter={(value) => {
                                                 const d = new Date(value as string)
                                                 return `${d.getDate()} ${MONTHS_UZ[d.getMonth()]}, ${d.getFullYear()}`
                                             }}
-                                            formatter={(value: number | string, name: string) => {
-                                                const label = name === "income" ? "Daromad" : "Xarajatlar"
-                                                return [`${formatUZS(Number(value))}`, label]
-                                            }}
                                             indicator="dot"
                                         />
                                     }
                                 />
-                                <Area
+                                <ChartLegend content={<ChartLegendContent />} />
+                                <Bar
                                     dataKey="income"
-                                    type="natural"
-                                    fill="url(#fillIncome)"
-                                    stroke="var(--color-income)"
+                                    fill="var(--color-income)"
+                                    radius={[4, 4, 0, 0]}
+                                    barSize={16}
                                 />
-                                <Area
+                                <Bar
                                     dataKey="expenses"
-                                    type="natural"
-                                    fill="url(#fillExpenses)"
-                                    stroke="var(--color-expenses)"
+                                    fill="var(--color-expenses)"
+                                    radius={[4, 4, 0, 0]}
+                                    barSize={16}
                                 />
-                            </AreaChart>
+                                <Line
+                                    dataKey="profit"
+                                    type="monotone"
+                                    stroke="var(--color-profit)"
+                                    strokeWidth={2}
+                                    strokeDasharray="5 5"
+                                    dot={false}
+                                />
+                            </ComposedChart>
                         </ChartContainer>
                     </CardContent>
                 </Card>
