@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
-import { Bar, ComposedChart, Line, CartesianGrid, XAxis, YAxis } from "recharts"
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 import { format } from "date-fns"
 import { toast } from "sonner"
 import {
@@ -20,7 +20,7 @@ import {
     Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle,
 } from "@/components/ui/card"
 import {
-    type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent,
+    type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent,
 } from "@/components/ui/chart"
 import {
     Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
@@ -40,23 +40,13 @@ const MONTHS_UZ = [
 const chartConfig = {
     income: {
         label: "Daromad",
-        color: "#22c55e",
+        color: "var(--color-chart-1)",
     },
     expenses: {
         label: "Xarajatlar",
-        color: "#ef4444",
-    },
-    profit: {
-        label: "Sof foyda",
-        color: "#3b82f6",
+        color: "var(--color-chart-2)",
     },
 } satisfies ChartConfig
-
-const formatAxisUZS = (value: number) => {
-    if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
-    if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`
-    return String(value)
-}
 
 const formatUZS = (num: number = 0) => new Intl.NumberFormat('ru-RU').format(num) + ' UZS'
 
@@ -275,13 +265,46 @@ export default function StadiumFinancePage() {
             {/* Chart */}
             {!loading && data && (
                 <Card className="@container/card">
-                    <CardHeader>
-                        <CardTitle>Kunlik daromad va xarajatlar</CardTitle>
-                        <CardDescription>{displayMonthYear} — daromad, xarajat va sof foyda</CardDescription>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                        <div className="space-y-1">
+                            <CardTitle>Kunlik daromad va xarajatlar</CardTitle>
+                            <CardDescription>
+                                {displayMonthYear} dagi jami
+                            </CardDescription>
+                        </div>
                     </CardHeader>
                     <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-                        <ChartContainer config={chartConfig} className="aspect-auto h-[300px] w-full">
-                            <ComposedChart data={data.daily} barGap={2}>
+                        <ChartContainer
+                            config={chartConfig}
+                            className="aspect-auto h-[250px] w-full"
+                        >
+                            <AreaChart data={data.daily}>
+                                <defs>
+                                    <linearGradient id="fillIncome" x1="0" y1="0" x2="0" y2="1">
+                                        <stop
+                                            offset="5%"
+                                            stopColor="var(--color-income)"
+                                            stopOpacity={1.0}
+                                        />
+                                        <stop
+                                            offset="95%"
+                                            stopColor="var(--color-income)"
+                                            stopOpacity={0.1}
+                                        />
+                                    </linearGradient>
+                                    <linearGradient id="fillExpenses" x1="0" y1="0" x2="0" y2="1">
+                                        <stop
+                                            offset="5%"
+                                            stopColor="var(--color-expenses)"
+                                            stopOpacity={0.8}
+                                        />
+                                        <stop
+                                            offset="95%"
+                                            stopColor="var(--color-expenses)"
+                                            stopOpacity={0.1}
+                                        />
+                                    </linearGradient>
+                                </defs>
                                 <CartesianGrid vertical={false} />
                                 <XAxis
                                     dataKey="date"
@@ -290,50 +313,37 @@ export default function StadiumFinancePage() {
                                     tickMargin={8}
                                     minTickGap={32}
                                     tickFormatter={(value) => {
-                                        const d = new Date(value)
-                                        return `${d.getDate()}-${MONTHS_UZ[d.getMonth()].slice(0, 3)}`
+                                        const date = new Date(value)
+                                        return `${MONTHS_UZ[date.getMonth()]} ${date.getDate()}`
                                     }}
                                 />
-                                <YAxis
-                                    tickLine={false}
-                                    axisLine={false}
-                                    tickMargin={8}
-                                    width={55}
-                                    tickFormatter={formatAxisUZS}
-                                />
                                 <ChartTooltip
+                                    cursor={false}
                                     content={
                                         <ChartTooltipContent
                                             labelFormatter={(value) => {
-                                                const d = new Date(value as string)
-                                                return `${d.getDate()} ${MONTHS_UZ[d.getMonth()]}, ${d.getFullYear()}`
+                                                const date = new Date(value as string | number | Date)
+                                                return `${MONTHS_UZ[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
                                             }}
                                             indicator="dot"
                                         />
                                     }
                                 />
-                                <ChartLegend content={<ChartLegendContent />} />
-                                <Bar
-                                    dataKey="income"
-                                    fill="var(--color-income)"
-                                    radius={[4, 4, 0, 0]}
-                                    barSize={16}
-                                />
-                                <Bar
+                                <Area
                                     dataKey="expenses"
-                                    fill="var(--color-expenses)"
-                                    radius={[4, 4, 0, 0]}
-                                    barSize={16}
+                                    type="natural"
+                                    fill="url(#fillExpenses)"
+                                    stroke="var(--color-expenses)"
+                                    stackId="a"
                                 />
-                                <Line
-                                    dataKey="profit"
-                                    type="monotone"
-                                    stroke="var(--color-profit)"
-                                    strokeWidth={2}
-                                    strokeDasharray="5 5"
-                                    dot={false}
+                                <Area
+                                    dataKey="income"
+                                    type="natural"
+                                    fill="url(#fillIncome)"
+                                    stroke="var(--color-income)"
+                                    stackId="a"
                                 />
-                            </ComposedChart>
+                            </AreaChart>
                         </ChartContainer>
                     </CardContent>
                 </Card>
