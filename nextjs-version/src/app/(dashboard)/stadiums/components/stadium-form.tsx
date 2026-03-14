@@ -137,6 +137,7 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
     })
 
     const fileMap = useRef<Map<string, File>>(new Map())
+    const [imageSizeInfo, setImageSizeInfo] = useState<Record<string, { original: number; compressed: number }>>({})
 
     const handleSubmit = async (values: StadiumFormValues) => {
         setUploading(true);
@@ -236,12 +237,13 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
         setUploading(true);
 
         try {
-            // Compress all files that are too large
+            // Compress all images to keep file size under 200KB
+            const originalSizes = files.map(f => f.size);
             const processedFiles = await Promise.all(
                 files.map(async (file) => {
-                    if (file.size > 500 * 1024) {
+                    if (file.size > 200 * 1024) {
                         toast.info(`"${file.name}" siqilmoqda...`);
-                        return await compressImage(file, 500);
+                        return await compressImage(file, 200);
                     }
                     return file;
                 })
@@ -251,13 +253,20 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                 const file = processedFiles[0];
                 const previewUrl = URL.createObjectURL(file);
                 fileMap.current.set(previewUrl, file);
+                setImageSizeInfo(prev => ({
+                    ...prev,
+                    [previewUrl]: { original: originalSizes[0], compressed: file.size }
+                }));
                 form.setValue("main_image", previewUrl, { shouldValidate: true });
             } else {
-                const newImages = processedFiles.map(file => {
+                const sizeUpdates: Record<string, { original: number; compressed: number }> = {};
+                const newImages = processedFiles.map((file, idx) => {
                     const previewUrl = URL.createObjectURL(file);
                     fileMap.current.set(previewUrl, file);
+                    sizeUpdates[previewUrl] = { original: originalSizes[idx], compressed: file.size };
                     return previewUrl;
                 });
+                setImageSizeInfo(prev => ({ ...prev, ...sizeUpdates }));
                 const currentImages = form.getValues("images") || [];
                 form.setValue("images", [...currentImages, ...newImages], { shouldValidate: true });
             }
@@ -268,6 +277,11 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
         } finally {
             setUploading(false);
         }
+    }
+
+    const formatFileSize = (bytes: number) => {
+        if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)}MB`
+        return `${(bytes / 1024).toFixed(0)}KB`
     }
 
     const [currentTab, setCurrentTab] = useState("main")
@@ -989,6 +1003,11 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                         <div className="absolute top-2 right-2 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm z-10 pointer-events-none">
                                             ASOSIY
                                         </div>
+                                        {imageSizeInfo[form.watch("main_image")] && (
+                                            <div className="absolute bottom-2 left-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-medium px-2 py-1 rounded shadow-sm z-10 pointer-events-none text-center">
+                                                {formatFileSize(imageSizeInfo[form.watch("main_image")].original)} → {formatFileSize(imageSizeInfo[form.watch("main_image")].compressed)}
+                                            </div>
+                                        )}
                                     </div>
                                     <FormMessage />
                                 </FormItem>
@@ -1033,6 +1052,11 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                                             <Trash className="h-4 w-4" />
                                                         </Button>
                                                     </div>
+                                                    {imageSizeInfo[imgUrl] && (
+                                                        <div className="absolute bottom-2 left-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-medium px-2 py-1 rounded shadow-sm z-10 pointer-events-none text-center">
+                                                            {formatFileSize(imageSizeInfo[imgUrl].original)} → {formatFileSize(imageSizeInfo[imgUrl].compressed)}
+                                                        </div>
+                                                    )}
                                                 </>
                                             ) : (
                                                 <div
