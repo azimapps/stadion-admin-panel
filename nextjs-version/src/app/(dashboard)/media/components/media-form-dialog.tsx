@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Trash2, Video, Plus } from "lucide-react"
+import { Trash2, Video, Plus, Languages, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Media, mediaService } from "@/services/media"
+import { toast } from "sonner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog"
 import { MarkdownEditor } from "@/components/markdown-editor"
@@ -69,6 +70,7 @@ export function MediaFormDialog({
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+    const [translating, setTranslating] = useState(false)
 
     const form = useForm<MediaFormValues>({
         resolver: zodResolver(mediaFormSchema),
@@ -106,6 +108,45 @@ export function MediaFormDialog({
             } finally {
                 setLoading(false)
             }
+        }
+    }
+
+    async function translateToRussian() {
+        const titleUz = form.getValues("title_uz")
+        const contentUz = form.getValues("content_uz")
+
+        if (!titleUz && !contentUz) {
+            toast.error("Avval o'zbek tilidagi maydonlarni to'ldiring")
+            return
+        }
+
+        setTranslating(true)
+        try {
+            const textsToTranslate = [titleUz, contentUz].filter(Boolean)
+            const translations = await Promise.all(
+                textsToTranslate.map(async (text) => {
+                    const res = await fetch(
+                        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=uz&tl=ru&dt=t&q=${encodeURIComponent(text)}`
+                    )
+                    const data = await res.json()
+                    return (data[0] as Array<[string]>).map((s) => s[0]).join("")
+                })
+            )
+
+            let idx = 0
+            if (titleUz) {
+                form.setValue("title_ru", translations[idx], { shouldValidate: true })
+                idx++
+            }
+            if (contentUz) {
+                form.setValue("content_ru", translations[idx], { shouldValidate: true })
+            }
+
+            toast.success("Rus tiliga tarjima qilindi!")
+        } catch {
+            toast.error("Tarjima qilishda xatolik yuz berdi")
+        } finally {
+            setTranslating(false)
         }
     }
 
@@ -218,6 +259,23 @@ export function MediaFormDialog({
                                         </FormItem>
                                     )}
                                 />
+                                <div className="flex justify-end">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={translateToRussian}
+                                        disabled={translating || loading}
+                                        className="rounded-xl"
+                                    >
+                                        {translating ? (
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <Languages className="mr-2 h-4 w-4" />
+                                        )}
+                                        {translating ? "Tarjima qilinmoqda..." : "Rus tiliga tarjima qilish"}
+                                    </Button>
+                                </div>
                             </TabsContent>
 
                             <TabsContent value="ru" className="space-y-6 mt-8">

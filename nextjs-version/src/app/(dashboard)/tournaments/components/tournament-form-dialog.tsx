@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Trash2, Trophy, Plus, Calendar as CalendarIcon, MapPin, DollarSign, Clock, Users } from "lucide-react"
+import { Trash2, Trophy, Plus, Calendar as CalendarIcon, MapPin, DollarSign, Clock, Users, Languages, Loader2 } from "lucide-react"
 import { format } from "date-fns"
 
 import { Button } from "@/components/ui/button"
@@ -41,6 +41,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
 
 const tournamentFormSchema = z.object({
     title_uz: z.string().min(2, { message: "Sarlavha kamida 2 ta belgi bo'lishi kerak." }),
@@ -81,6 +82,7 @@ export function TournamentFormDialog({
     const [loading, setLoading] = useState(false)
     const [stadiums, setStadiums] = useState<Stadium[]>([])
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+    const [translating, setTranslating] = useState(false)
 
     const form = useForm<any>({
         resolver: zodResolver(tournamentFormSchema),
@@ -133,6 +135,45 @@ export function TournamentFormDialog({
             } finally {
                 setLoading(false)
             }
+        }
+    }
+
+    async function translateToRussian() {
+        const titleUz = form.getValues("title_uz")
+        const descUz = form.getValues("description_uz")
+
+        if (!titleUz && !descUz) {
+            toast.error("Avval o'zbek tilidagi maydonlarni to'ldiring")
+            return
+        }
+
+        setTranslating(true)
+        try {
+            const textsToTranslate = [titleUz, descUz].filter(Boolean)
+            const translations = await Promise.all(
+                textsToTranslate.map(async (text) => {
+                    const res = await fetch(
+                        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=uz&tl=ru&dt=t&q=${encodeURIComponent(text)}`
+                    )
+                    const data = await res.json()
+                    return (data[0] as Array<[string]>).map((s) => s[0]).join("")
+                })
+            )
+
+            let idx = 0
+            if (titleUz) {
+                form.setValue("title_ru", translations[idx], { shouldValidate: true })
+                idx++
+            }
+            if (descUz) {
+                form.setValue("description_ru", translations[idx], { shouldValidate: true })
+            }
+
+            toast.success("Rus tiliga tarjima qilindi!")
+        } catch {
+            toast.error("Tarjima qilishda xatolik yuz berdi")
+        } finally {
+            setTranslating(false)
         }
     }
 
@@ -512,6 +553,23 @@ export function TournamentFormDialog({
                                         </FormItem>
                                     )}
                                 />
+                                <div className="flex justify-end">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={translateToRussian}
+                                        disabled={translating || loading}
+                                        className="rounded-xl"
+                                    >
+                                        {translating ? (
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <Languages className="mr-2 h-4 w-4" />
+                                        )}
+                                        {translating ? "Tarjima qilinmoqda..." : "Rus tiliga tarjima qilish"}
+                                    </Button>
+                                </div>
                             </TabsContent>
 
                             <TabsContent value="ru" className="space-y-6 mt-8 animate-in fade-in slide-in-from-bottom-2 duration-500">

@@ -19,12 +19,13 @@ import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { comfortService } from "@/services/comfort"
 import { useRouter } from "next/navigation"
-import { Loader2 } from "lucide-react"
+import { Loader2, Languages } from "lucide-react"
 import { toast } from "sonner"
 
 export function ComfortForm() {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
+    const [translating, setTranslating] = useState(false)
 
     const form = useForm<ComfortFormValues>({
         resolver: zodResolver(comfortSchema) as any,
@@ -35,6 +36,28 @@ export function ComfortForm() {
             is_active: true,
         },
     })
+
+    async function translateToRussian() {
+        const titleUz = form.getValues("title_uz")
+        if (!titleUz) {
+            toast.error("Avval o'zbek tilidagi maydonni to'ldiring")
+            return
+        }
+        setTranslating(true)
+        try {
+            const res = await fetch(
+                `https://translate.googleapis.com/translate_a/single?client=gtx&sl=uz&tl=ru&dt=t&q=${encodeURIComponent(titleUz)}`
+            )
+            const data = await res.json()
+            const translated = (data[0] as Array<[string]>).map((s) => s[0]).join("")
+            form.setValue("title_ru", translated, { shouldValidate: true })
+            toast.success("Rus tiliga tarjima qilindi!")
+        } catch {
+            toast.error("Tarjima qilishda xatolik yuz berdi")
+        } finally {
+            setTranslating(false)
+        }
+    }
 
     const onSubmit = async (values: ComfortFormValues) => {
         setLoading(true)
@@ -111,6 +134,24 @@ export function ComfortForm() {
                                 </FormItem>
                             )}
                         />
+                    </div>
+
+                    <div className="flex justify-end">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={translateToRussian}
+                            disabled={translating || loading}
+                            className="rounded-xl"
+                        >
+                            {translating ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <Languages className="mr-2 h-4 w-4" />
+                            )}
+                            {translating ? "Tarjima qilinmoqda..." : "Rus tiliga tarjima qilish"}
+                        </Button>
                     </div>
 
                     <FormField

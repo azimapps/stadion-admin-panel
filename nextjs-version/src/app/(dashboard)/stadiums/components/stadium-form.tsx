@@ -53,6 +53,7 @@ import {
     TrainFront,
     Zap,
     Check,
+    Languages,
 } from "lucide-react"
 import dynamic from "next/dynamic"
 import { toast } from "sonner"
@@ -81,6 +82,7 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
     const [previewImage, setPreviewImage] = useState<string | null>(null)
     const [regions, setRegions] = useState<Region[]>([])
     const [comforts, setComforts] = useState<Comfort[]>([])
+    const [translating, setTranslating] = useState(false)
 
     useEffect(() => {
         fetchInitialData()
@@ -96,6 +98,46 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
             setComforts(comfortsData)
         } catch (error) {
             console.error("Error fetching regions/comforts:", error)
+        }
+    }
+
+    async function translateToRussian() {
+        const nameUz = form.getValues("name_uz")
+        const descUz = form.getValues("description_uz")
+        const addressUz = form.getValues("address_uz")
+
+        if (!nameUz && !descUz && !addressUz) {
+            toast.error("Avval o'zbek tilidagi maydonlarni to'ldiring")
+            return
+        }
+
+        setTranslating(true)
+        try {
+            const fields = [
+                { value: nameUz, target: "name_ru" as const },
+                { value: descUz, target: "description_ru" as const },
+                { value: addressUz, target: "address_ru" as const },
+            ].filter((f) => f.value)
+
+            const translations = await Promise.all(
+                fields.map(async (f) => {
+                    const res = await fetch(
+                        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=uz&tl=ru&dt=t&q=${encodeURIComponent(f.value)}`
+                    )
+                    const data = await res.json()
+                    return (data[0] as Array<[string]>).map((s) => s[0]).join("")
+                })
+            )
+
+            fields.forEach((f, i) => {
+                form.setValue(f.target, translations[i], { shouldValidate: true })
+            })
+
+            toast.success("Rus tiliga tarjima qilindi!")
+        } catch {
+            toast.error("Tarjima qilishda xatolik yuz berdi")
+        } finally {
+            setTranslating(false)
         }
     }
 
@@ -715,6 +757,24 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                     </FormItem>
                                 )}
                             />
+
+                            <div className="flex justify-end">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={translateToRussian}
+                                    disabled={translating}
+                                    className="rounded-xl"
+                                >
+                                    {translating ? (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <Languages className="mr-2 h-4 w-4" />
+                                    )}
+                                    {translating ? "Tarjima qilinmoqda..." : "Rus tiliga tarjima qilish"}
+                                </Button>
+                            </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <FormField
