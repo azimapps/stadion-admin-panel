@@ -1,3 +1,5 @@
+"use client"
+
 import {
   Table,
   TableBody,
@@ -12,10 +14,17 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { PieChart, Pie, Label } from "recharts"
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 
 export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = [], paymentMethods = null, loading = false }: any) {
   const formatUZS = (num: number) => num ? new Intl.NumberFormat('ru-RU').format(num) + ' UZS' : '0 UZS'
+  const formatShort = (num: number) => {
+    if (num >= 1_000_000) return (num / 1_000_000).toFixed(1) + 'M'
+    if (num >= 1_000) return (num / 1_000).toFixed(0) + 'K'
+    return String(num)
+  }
 
   if (loading) {
     return <div className="h-[400px] w-full animate-pulse bg-muted rounded-lg" />
@@ -123,57 +132,100 @@ export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = []
         </Card>
       </TabsContent>
       <TabsContent value="payment-methods" className="px-4 lg:px-6">
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>To'lov Usuli</TableHead>
-                  <TableHead className="text-right">Tranzaksiyalar Soni</TableHead>
-                  <TableHead className="text-right font-bold">Jami Summa</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paymentMethods?.summary ? (
-                  <>
-                    {paymentMethods.summary.payme && (
-                      <TableRow>
-                        <TableCell className="font-medium">Payme</TableCell>
-                        <TableCell className="text-right">{paymentMethods.summary.payme.count} ta</TableCell>
-                        <TableCell className="text-right font-bold text-green-600 dark:text-green-400">{formatUZS(paymentMethods.summary.payme.total)}</TableCell>
-                      </TableRow>
-                    )}
-                    {paymentMethods.summary.click && (
-                      <TableRow>
-                        <TableCell className="font-medium">Click</TableCell>
-                        <TableCell className="text-right">{paymentMethods.summary.click.count} ta</TableCell>
-                        <TableCell className="text-right font-bold text-green-600 dark:text-green-400">{formatUZS(paymentMethods.summary.click.total)}</TableCell>
-                      </TableRow>
-                    )}
-                    {paymentMethods.summary.cash && (
-                      <TableRow>
-                        <TableCell className="font-medium">Naqd Pul</TableCell>
-                        <TableCell className="text-right">{paymentMethods.summary.cash.count} ta</TableCell>
-                        <TableCell className="text-right font-bold text-green-600 dark:text-green-400">{formatUZS(paymentMethods.summary.cash.total)}</TableCell>
-                      </TableRow>
-                    )}
-                    <TableRow className="border-t-2 bg-muted/40">
-                      <TableCell className="font-bold">Jami</TableCell>
-                      <TableCell className="text-right font-bold">
-                        {(paymentMethods.summary.payme?.count || 0) + (paymentMethods.summary.click?.count || 0) + (paymentMethods.summary.cash?.count || 0)} ta
-                      </TableCell>
-                      <TableCell className="text-right font-bold text-green-600 dark:text-green-400">{formatUZS(paymentMethods.total)}</TableCell>
-                    </TableRow>
-                  </>
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-center h-24 text-muted-foreground">Ma'lumot topilmadi</TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        {(() => {
+          const pm = paymentMethods?.summary
+          const total = paymentMethods?.total || 0
+
+          const methods = [
+            pm?.payme && { name: 'Payme', value: pm.payme.total, count: pm.payme.count, fill: 'var(--color-chart-1)' },
+            pm?.click && { name: 'Click', value: pm.click.total, count: pm.click.count, fill: 'var(--color-chart-2)' },
+            pm?.cash  && { name: 'Naqd Pul', value: pm.cash.total, count: pm.cash.count, fill: 'var(--color-chart-3)' },
+          ].filter(Boolean) as { name: string; value: number; count: number; fill: string }[]
+
+          const chartConfig: ChartConfig = {
+            Payme:    { label: 'Payme',    color: 'var(--color-chart-1)' },
+            Click:    { label: 'Click',    color: 'var(--color-chart-2)' },
+            'Naqd Pul': { label: 'Naqd Pul', color: 'var(--color-chart-3)' },
+          }
+
+          if (!pm || methods.length === 0) {
+            return (
+              <Card>
+                <CardContent className="h-[300px] flex items-center justify-center text-muted-foreground">
+                  Ma'lumot topilmadi
+                </CardContent>
+              </Card>
+            )
+          }
+
+          return (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader className="pb-0">
+                  <CardTitle className="text-base">Daromad Taqsimoti</CardTitle>
+                  <CardDescription>To'lov usullari bo'yicha ulush</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer config={chartConfig} className="mx-auto h-[240px]">
+                    <PieChart>
+                      <ChartTooltip
+                        cursor={false}
+                        content={
+                          <ChartTooltipContent
+                            hideLabel
+                            formatter={(value, name) => [formatUZS(Number(value)), name]}
+                          />
+                        }
+                      />
+                      <Pie data={methods} dataKey="value" nameKey="name" innerRadius={68} outerRadius={100} strokeWidth={2}>
+                        <Label
+                          content={({ viewBox }) => {
+                            if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                              return (
+                                <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
+                                  <tspan x={viewBox.cx} y={viewBox.cy} style={{ fontSize: 22, fontWeight: 700, fill: 'var(--foreground)' }}>
+                                    {formatShort(total)}
+                                  </tspan>
+                                  <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 22} style={{ fontSize: 11, fill: 'var(--muted-foreground)' }}>
+                                    UZS
+                                  </tspan>
+                                </text>
+                              )
+                            }
+                          }}
+                        />
+                      </Pie>
+                    </PieChart>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+
+              <div className="flex flex-col gap-3 justify-center">
+                {methods.map((method) => {
+                  const pct = total > 0 ? Math.round((method.value / total) * 100) : 0
+                  return (
+                    <div key={method.name} className="rounded-xl border bg-card p-4 flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: method.fill }} />
+                          <span className="font-semibold text-sm">{method.name}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">{method.count} ta tranzaksiya</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-base font-bold">{formatUZS(method.value)}</span>
+                        <span className="text-sm font-semibold" style={{ color: method.fill }}>{pct}%</span>
+                      </div>
+                      <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: method.fill }} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })()}
       </TabsContent>
     </Tabs>
   )
