@@ -23,8 +23,8 @@ export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = []
 
   return (
     <Tabs defaultValue="stadiums" className="w-full flex-col justify-start gap-6">
-      <div className="flex items-center justify-between px-4 lg:px-6 mb-4">
-        <TabsList>
+      <div className="flex items-center justify-between px-4 lg:px-6 mb-4 overflow-x-auto">
+        <TabsList className="flex-shrink-0">
           <TabsTrigger value="stadiums">Stadionlar Daromadi</TabsTrigger>
           <TabsTrigger value="cities">Hududlar (Aktiv Userlar)</TabsTrigger>
           <TabsTrigger value="daily">Kunlik To'lovlar</TabsTrigger>
