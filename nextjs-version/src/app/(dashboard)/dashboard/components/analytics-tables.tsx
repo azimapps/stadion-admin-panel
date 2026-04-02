@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
 
-export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = [], loading = false }: any) {
+export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = [], paymentMethods = null, loading = false }: any) {
   const formatUZS = (num: number) => num ? new Intl.NumberFormat('ru-RU').format(num) + ' UZS' : '0 UZS'
 
   if (loading) {
@@ -28,6 +28,7 @@ export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = []
           <TabsTrigger value="stadiums">Stadionlar Daromadi</TabsTrigger>
           <TabsTrigger value="cities">Hududlar (Aktiv Userlar)</TabsTrigger>
           <TabsTrigger value="daily">Kunlik To'lovlar</TabsTrigger>
+          <TabsTrigger value="payment-methods">To'lov Usullari</TabsTrigger>
         </TabsList>
       </div>
 
@@ -114,6 +115,59 @@ export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = []
                 )) : (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">Ma'lumot topilmadi</TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </TabsContent>
+      <TabsContent value="payment-methods" className="px-4 lg:px-6">
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>To'lov Usuli</TableHead>
+                  <TableHead className="text-right">Tranzaksiyalar Soni</TableHead>
+                  <TableHead className="text-right font-bold">Jami Summa</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paymentMethods?.summary ? (
+                  <>
+                    {paymentMethods.summary.payme && (
+                      <TableRow>
+                        <TableCell className="font-medium">Payme</TableCell>
+                        <TableCell className="text-right">{paymentMethods.summary.payme.count} ta</TableCell>
+                        <TableCell className="text-right font-bold text-green-600 dark:text-green-400">{formatUZS(paymentMethods.summary.payme.total)}</TableCell>
+                      </TableRow>
+                    )}
+                    {paymentMethods.summary.click && (
+                      <TableRow>
+                        <TableCell className="font-medium">Click</TableCell>
+                        <TableCell className="text-right">{paymentMethods.summary.click.count} ta</TableCell>
+                        <TableCell className="text-right font-bold text-green-600 dark:text-green-400">{formatUZS(paymentMethods.summary.click.total)}</TableCell>
+                      </TableRow>
+                    )}
+                    {paymentMethods.summary.cash && (
+                      <TableRow>
+                        <TableCell className="font-medium">Naqd Pul</TableCell>
+                        <TableCell className="text-right">{paymentMethods.summary.cash.count} ta</TableCell>
+                        <TableCell className="text-right font-bold text-green-600 dark:text-green-400">{formatUZS(paymentMethods.summary.cash.total)}</TableCell>
+                      </TableRow>
+                    )}
+                    <TableRow className="border-t-2 bg-muted/40">
+                      <TableCell className="font-bold">Jami</TableCell>
+                      <TableCell className="text-right font-bold">
+                        {(paymentMethods.summary.payme?.count || 0) + (paymentMethods.summary.click?.count || 0) + (paymentMethods.summary.cash?.count || 0)} ta
+                      </TableCell>
+                      <TableCell className="text-right font-bold text-green-600 dark:text-green-400">{formatUZS(paymentMethods.total)}</TableCell>
+                    </TableRow>
+                  </>
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center h-24 text-muted-foreground">Ma'lumot topilmadi</TableCell>
                   </TableRow>
                 )}
               </TableBody>
