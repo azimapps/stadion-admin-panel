@@ -178,7 +178,7 @@ export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = []
                         content={
                           <ChartTooltipContent
                             hideLabel
-                            formatter={(value, name) => [formatUZS(Number(value)), name]}
+                            formatter={(value: number | string) => [formatUZS(Number(value)), '']}
                           />
                         }
                       />
