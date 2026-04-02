@@ -136,16 +136,21 @@ export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = []
           const pm = paymentMethods?.summary
           const total = paymentMethods?.total || 0
 
-          const methods = [
+          const chartMethods = [
             pm?.payme && { name: 'Payme', value: pm.payme.total, count: pm.payme.count, fill: 'var(--color-chart-1)' },
             pm?.click && { name: 'Click', value: pm.click.total, count: pm.click.count, fill: 'var(--color-chart-2)' },
-            pm?.cash  && { name: 'Naqd Pul', value: pm.cash.total, count: pm.cash.count, fill: 'var(--color-chart-3)' },
+          ].filter(Boolean) as { name: string; value: number; count: number; fill: string }[]
+
+          const cashData = pm?.cash ? { value: pm.cash.total, count: pm.cash.count } : null
+
+          const methods = [
+            ...chartMethods,
+            pm?.cash && { name: 'Naqd Pul', value: pm.cash.total, count: pm.cash.count, fill: 'var(--color-chart-3)' },
           ].filter(Boolean) as { name: string; value: number; count: number; fill: string }[]
 
           const chartConfig: ChartConfig = {
-            Payme:    { label: 'Payme',    color: 'var(--color-chart-1)' },
-            Click:    { label: 'Click',    color: 'var(--color-chart-2)' },
-            'Naqd Pul': { label: 'Naqd Pul', color: 'var(--color-chart-3)' },
+            Payme: { label: 'Payme', color: 'var(--color-chart-1)' },
+            Click: { label: 'Click', color: 'var(--color-chart-2)' },
           }
 
           if (!pm || methods.length === 0) {
@@ -177,7 +182,7 @@ export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = []
                           />
                         }
                       />
-                      <Pie data={methods} dataKey="value" nameKey="name" innerRadius={68} outerRadius={100} strokeWidth={2}>
+                      <Pie data={chartMethods} dataKey="value" nameKey="name" innerRadius={68} outerRadius={100} strokeWidth={2}>
                         <Label
                           content={({ viewBox }) => {
                             if (viewBox && "cx" in viewBox && "cy" in viewBox) {
@@ -197,6 +202,12 @@ export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = []
                       </Pie>
                     </PieChart>
                   </ChartContainer>
+                  {cashData && (
+                    <div className="mt-2 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                      <span className="h-2 w-2 rounded-full bg-[var(--color-chart-3)]" />
+                      <span>Naqd pul: <span className="font-medium text-foreground">{formatUZS(cashData.value)}</span> · {cashData.count} ta</span>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
