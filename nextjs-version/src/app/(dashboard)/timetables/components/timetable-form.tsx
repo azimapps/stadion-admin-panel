@@ -246,17 +246,27 @@ export function TimetableForm() {
                                             key={hour}
                                             onClick={() => toggleHour(day.key, hour)}
                                             className={cn(
-                                                "relative h-16 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center justify-center gap-1 group overflow-hidden",
+                                                "relative h-16 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center justify-center gap-0 group overflow-hidden",
                                                 isSelected
                                                     ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105 z-10 active:scale-95"
                                                     : "bg-muted/10 border-border/40 hover:border-primary/40 hover:bg-muted/20 active:scale-95"
                                             )}
                                         >
                                             <span className={cn(
-                                                "text-lg font-black tracking-tighter transition-colors",
+                                                "text-xs font-black tracking-tighter leading-tight transition-colors",
                                                 isSelected ? "text-primary-foreground" : "text-foreground/80 group-hover:text-primary"
                                             )}>
                                                 {hour.toString().padStart(2, '0')}:00
+                                            </span>
+                                            <span className={cn(
+                                                "text-[9px] font-bold leading-none transition-colors",
+                                                isSelected ? "text-primary-foreground/50" : "text-muted-foreground/40"
+                                            )}>─</span>
+                                            <span className={cn(
+                                                "text-xs font-black tracking-tighter leading-tight transition-colors",
+                                                isSelected ? "text-primary-foreground" : "text-foreground/80 group-hover:text-primary"
+                                            )}>
+                                                {((hour + 1) % 24).toString().padStart(2, '0')}:00
                                             </span>
                                             {isSelected && (
                                                 <div className="absolute top-1 right-1">
