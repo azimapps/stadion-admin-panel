@@ -181,6 +181,90 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
     const fileMap = useRef<Map<string, File>>(new Map())
     const [imageSizeInfo, setImageSizeInfo] = useState<Record<string, { original: number; compressed: number }>>({})
 
+    // ── Draft persistence (new stadiums only) ──────────────────────────────
+    const DRAFT_KEY = "stadium_form_new_draft"
+    const isRestoringRef = useRef(false)
+
+    const urlToBase64 = async (url: string): Promise<string> => {
+        if (!url) return url
+        if (url.startsWith("data:")) return url
+        if (url.startsWith("blob:")) {
+            const file = fileMap.current.get(url)
+            if (!file) return url
+            return new Promise<string>((resolve) => {
+                const reader = new FileReader()
+                reader.onload = () => resolve(reader.result as string)
+                reader.readAsDataURL(file)
+            })
+        }
+        return url
+    }
+
+    const saveDraft = async () => {
+        if (initialData || isRestoringRef.current) return
+        try {
+            const values = form.getValues()
+            const mainB64 = values.main_image ? await urlToBase64(values.main_image) : ""
+            const imgsB64 = await Promise.all((values.images || []).map(urlToBase64))
+            localStorage.setItem(DRAFT_KEY, JSON.stringify({ ...values, main_image: mainB64, images: imgsB64 }))
+        } catch (e) {
+            console.warn("Could not save form draft:", e)
+        }
+    }
+
+    // Restore draft on mount
+    useEffect(() => {
+        if (initialData) return
+        const raw = localStorage.getItem(DRAFT_KEY)
+        if (!raw) return
+        try {
+            const draft = JSON.parse(raw)
+            isRestoringRef.current = true
+            const restoreUrl = async (url: string): Promise<string> => {
+                if (!url || !url.startsWith("data:")) return url
+                const res = await fetch(url)
+                const blob = await res.blob()
+                const file = new File([blob], "restored.jpg", { type: blob.type })
+                const blobUrl = URL.createObjectURL(blob)
+                fileMap.current.set(blobUrl, file)
+                return blobUrl
+            }
+            ;(async () => {
+                const mainImg = await restoreUrl(draft.main_image || "")
+                const imgs = await Promise.all((draft.images || []).map(restoreUrl))
+                const restored = { ...draft, main_image: mainImg, images: imgs }
+                Object.entries(restored).forEach(([k, v]) => {
+                    form.setValue(k as any, v as any)
+                })
+                isRestoringRef.current = false
+                toast.info("Oldingi ma'lumotlar tiklandi")
+            })()
+        } catch (e) {
+            isRestoringRef.current = false
+            console.warn("Could not restore form draft:", e)
+        }
+    }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Watch text field changes and persist them
+    useEffect(() => {
+        if (initialData) return
+        const sub = form.watch(() => {
+            if (isRestoringRef.current) return
+            try {
+                const values = form.getValues()
+                const raw = localStorage.getItem(DRAFT_KEY)
+                const existing: Record<string, any> = raw ? JSON.parse(raw) : {}
+                const textOnly: Record<string, any> = {}
+                Object.entries(values).forEach(([k, v]) => {
+                    if (k !== "main_image" && k !== "images") textOnly[k] = v
+                })
+                localStorage.setItem(DRAFT_KEY, JSON.stringify({ ...existing, ...textOnly }))
+            } catch {}
+        })
+        return () => sub.unsubscribe()
+    }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    // ──────────────────────────────────────────────────────────────────────
+
     const handleSubmit = async (values: StadiumFormValues) => {
         setUploading(true);
         try {
@@ -248,6 +332,7 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
             delete (submissionData as any).phones;
 
             await onSubmit(submissionData as any);
+            localStorage.removeItem(DRAFT_KEY)
         } catch (error: any) {
             console.error("Submission error:", error);
 
@@ -312,6 +397,7 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                 const currentImages = form.getValues("images") || [];
                 form.setValue("images", [...currentImages, ...newImages], { shouldValidate: true });
             }
+            await saveDraft()
         } catch (error) {
             console.error("Image compression failed:", error);
             setErrorMessage("Rasmni siqishda xatolik yuz berdi. Boshqa rasm tanlang.");
@@ -326,9 +412,9 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
         return `${(bytes / 1024).toFixed(0)}KB`
     }
 
-    const [currentTab, setCurrentTab] = useState("main")
+    const [currentTab, setCurrentTab] = useState("media")
 
-    const tabs = ["main", "info", "location", "media"]
+    const tabs = ["media", "main", "info", "location"]
     // Validation fields for each tab
     const tabFields: Record<string, (keyof StadiumFormValues)[]> = {
         main: ["is_active", "phones", "capacity", "price_per_hour", "discount_price_per_hour", "surface_type", "roof_type", "comfort_ids"], // phones is complex, trigger("phones") works
@@ -382,6 +468,10 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                 <form className="space-y-8">
                     <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
                         <TabsList className="grid w-full h-14 p-1.5 bg-muted/50 backdrop-blur-sm rounded-2xl border border-border/50 shadow-inner grid-cols-4">
+                            <TabsTrigger value="media" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md transition-all gap-2 py-2">
+                                <ImageIcon className="size-4 opacity-70 group-data-[state=active]:opacity-100" />
+                                <span className="hidden sm:inline">Media</span>
+                            </TabsTrigger>
                             <TabsTrigger value="main" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md transition-all gap-2 py-2">
                                 <LayoutGrid className="size-4 opacity-70 group-data-[state=active]:opacity-100" />
                                 <span className="hidden sm:inline">Asosiy</span>
@@ -393,10 +483,6 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                             <TabsTrigger value="location" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md transition-all gap-2 py-2">
                                 <MapPin className="size-4 opacity-70 group-data-[state=active]:opacity-100" />
                                 <span className="hidden sm:inline">Manzil</span>
-                            </TabsTrigger>
-                            <TabsTrigger value="media" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md transition-all gap-2 py-2">
-                                <ImageIcon className="size-4 opacity-70 group-data-[state=active]:opacity-100" />
-                                <span className="hidden sm:inline">Media</span>
                             </TabsTrigger>
                         </TabsList>
 
@@ -1107,6 +1193,7 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                                                                 const newImages = [...images];
                                                                 newImages.splice(i, 1);
                                                                 form.setValue("images", newImages, { shouldValidate: true });
+                                                                saveDraft()
                                                             }}
                                                         >
                                                             <Trash className="h-4 w-4" />
@@ -1166,10 +1253,10 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
                             type="button"
                             variant="outline"
                             onClick={handlePrevious}
-                            disabled={currentTab === "main" || uploading}
+                            disabled={currentTab === "media" || uploading}
                             className={cn(
                                 "rounded-xl px-6 h-11 border-border/50 hover:bg-background transition-all",
-                                currentTab === "main" ? "invisible" : ""
+                                currentTab === "media" ? "invisible" : ""
                             )}
                         >
                             Avvalgisi
