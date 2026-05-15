@@ -31,13 +31,18 @@ export function UserViewDialog({ user, open, onOpenChange }: UserViewDialogProps
   }
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('uz-UZ', {
+    const date = new Date(dateStr + 'Z')
+    const parts = new Intl.DateTimeFormat('en', {
+      timeZone: 'Asia/Tashkent',
       year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
       hour: '2-digit',
-      minute: '2-digit'
-    })
+      minute: '2-digit',
+      hour12: false
+    }).formatToParts(date)
+    const get = (type: string) => parts.find(p => p.type === type)?.value ?? ''
+    return `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}`
   }
 
   const getInitials = (name: string | null, phone: string) => {

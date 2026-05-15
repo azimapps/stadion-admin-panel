@@ -10,6 +10,7 @@ export default function Page() {
   const [currentDate, setCurrentDate] = React.useState(new Date())
   const [analyticsData, setAnalyticsData] = React.useState<any>(null)
   const [financeData, setFinanceData] = React.useState<any>(null)
+  const [paymentMethodsData, setPaymentMethodsData] = React.useState<any>(null)
   const [loading, setLoading] = React.useState(true)
 
   React.useEffect(() => {
@@ -19,13 +20,21 @@ export default function Page() {
         const month = currentDate.getMonth() + 1
         const year = currentDate.getFullYear()
 
-        const [analyticsRes, financeRes] = await Promise.all([
+        const firstDay = new Date(year, currentDate.getMonth(), 1)
+        const lastDay = new Date(year, currentDate.getMonth() + 1, 0)
+        const fmt = (d: Date) => d.toISOString().split('T')[0]
+        const dateFrom = fmt(firstDay)
+        const dateTo = fmt(lastDay)
+
+        const [analyticsRes, financeRes, paymentMethodsRes] = await Promise.all([
           apiClient.get<any>(`/api/v1/admin/analytics/?month=${month}&year=${year}`).catch(() => null),
-          apiClient.get<any>(`/api/v1/admin/analytics/payments?month=${month}&year=${year}`).catch(() => null)
+          apiClient.get<any>(`/api/v1/admin/analytics/payments?month=${month}&year=${year}`).catch(() => null),
+          apiClient.get<any>(`/api/v1/admin/analytics/payment-methods?date_from=${dateFrom}&date_to=${dateTo}`).catch(() => null),
         ])
 
         setAnalyticsData(analyticsRes)
         setFinanceData(financeRes)
+        setPaymentMethodsData(paymentMethodsRes)
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error)
       } finally {
@@ -57,6 +66,7 @@ export default function Page() {
           cities={analyticsData?.cities || []}
           stadiums={financeData?.by_stadium || []}
           dailyPayments={financeData?.daily || []}
+          paymentMethods={paymentMethodsData}
           loading={loading}
         />
       </div>

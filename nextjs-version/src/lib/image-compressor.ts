@@ -3,7 +3,7 @@
  * Uses Canvas API to resize and compress images
  */
 
-const MAX_SIZE_KB = 500;
+const MAX_SIZE_KB = 200;
 const MAX_SIZE_BYTES = MAX_SIZE_KB * 1024;
 
 export async function compressImage(file: File, maxSizeKB: number = MAX_SIZE_KB): Promise<File> {
@@ -29,9 +29,9 @@ export async function compressImage(file: File, maxSizeKB: number = MAX_SIZE_KB)
                     return;
                 }
 
-                // Calculate new dimensions
+                // Calculate new dimensions - use 1280 max to keep file size small
                 let { width, height } = img;
-                const maxDimension = 1920; // Max width/height
+                const maxDimension = 1280;
 
                 // Scale down if image is too large
                 if (width > maxDimension || height > maxDimension) {
@@ -47,11 +47,15 @@ export async function compressImage(file: File, maxSizeKB: number = MAX_SIZE_KB)
                 canvas.width = width;
                 canvas.height = height;
 
+                // Fill background with white (for PNG transparency)
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, width, height);
+
                 // Draw image on canvas
                 ctx.drawImage(img, 0, 0, width, height);
 
                 // Try different quality levels to get under max size
-                let quality = 0.9;
+                let quality = 0.7;
                 let compressedDataUrl: string;
 
                 const tryCompress = () => {
@@ -59,15 +63,17 @@ export async function compressImage(file: File, maxSizeKB: number = MAX_SIZE_KB)
                     const base64Size = (compressedDataUrl.length * 3) / 4 -
                         (compressedDataUrl.endsWith('==') ? 2 : compressedDataUrl.endsWith('=') ? 1 : 0);
 
-                    if (base64Size > maxSizeKB * 1024 && quality > 0.1) {
-                        quality -= 0.1;
+                    if (base64Size > maxSizeKB * 1024 && quality > 0.05) {
+                        quality -= 0.05;
 
-                        // Also reduce dimensions if quality is getting too low
-                        if (quality <= 0.5) {
-                            width *= 0.9;
-                            height *= 0.9;
+                        // Also reduce dimensions if quality is getting low
+                        if (quality <= 0.4) {
+                            width *= 0.85;
+                            height *= 0.85;
                             canvas.width = width;
                             canvas.height = height;
+                            ctx.fillStyle = '#FFFFFF';
+                            ctx.fillRect(0, 0, width, height);
                             ctx.drawImage(img, 0, 0, width, height);
                         }
 
@@ -82,7 +88,7 @@ export async function compressImage(file: File, maxSizeKB: number = MAX_SIZE_KB)
                                     file.name.replace(/\.[^.]+$/, '.jpg'),
                                     { type: 'image/jpeg' }
                                 );
-                                console.log(`Image compressed: ${(file.size / 1024).toFixed(1)}KB -> ${(compressedFile.size / 1024).toFixed(1)}KB`);
+                                console.log(`Image compressed: ${(file.size / 1024).toFixed(1)}KB -> ${(compressedFile.size / 1024).toFixed(1)}KB (quality: ${quality.toFixed(2)})`);
                                 resolve(compressedFile);
                             })
                             .catch(reject);

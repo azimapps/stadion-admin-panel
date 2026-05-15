@@ -1,3 +1,5 @@
+"use client"
+
 import {
   Table,
   TableBody,
@@ -12,10 +14,17 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { PieChart, Pie, Label } from "recharts"
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 
-export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = [], loading = false }: any) {
+export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = [], paymentMethods = null, loading = false }: any) {
   const formatUZS = (num: number) => num ? new Intl.NumberFormat('ru-RU').format(num) + ' UZS' : '0 UZS'
+  const formatShort = (num: number) => {
+    if (num >= 1_000_000) return (num / 1_000_000).toFixed(1) + 'M'
+    if (num >= 1_000) return (num / 1_000).toFixed(0) + 'K'
+    return String(num)
+  }
 
   if (loading) {
     return <div className="h-[400px] w-full animate-pulse bg-muted rounded-lg" />
@@ -28,6 +37,7 @@ export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = []
           <TabsTrigger value="stadiums">Stadionlar Daromadi</TabsTrigger>
           <TabsTrigger value="cities">Hududlar (Aktiv Userlar)</TabsTrigger>
           <TabsTrigger value="daily">Kunlik To'lovlar</TabsTrigger>
+          <TabsTrigger value="payment-methods">To'lov Usullari</TabsTrigger>
         </TabsList>
       </div>
 
@@ -120,6 +130,113 @@ export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = []
             </Table>
           </CardContent>
         </Card>
+      </TabsContent>
+      <TabsContent value="payment-methods" className="px-4 lg:px-6">
+        {(() => {
+          const pm = paymentMethods?.summary
+          const total = paymentMethods?.total || 0
+
+          const chartMethods = [
+            pm?.payme && { name: 'Payme', value: pm.payme.total, count: pm.payme.count, fill: 'var(--color-chart-1)' },
+            pm?.click && { name: 'Click', value: pm.click.total, count: pm.click.count, fill: 'var(--color-chart-2)' },
+          ].filter(Boolean) as { name: string; value: number; count: number; fill: string }[]
+
+          const cashData = pm?.cash ? { value: pm.cash.total, count: pm.cash.count } : null
+
+          const methods = [
+            ...chartMethods,
+            pm?.cash && { name: 'Naqd Pul', value: pm.cash.total, count: pm.cash.count, fill: 'var(--color-chart-3)' },
+          ].filter(Boolean) as { name: string; value: number; count: number; fill: string }[]
+
+          const chartConfig: ChartConfig = {
+            Payme: { label: 'Payme', color: 'var(--color-chart-1)' },
+            Click: { label: 'Click', color: 'var(--color-chart-2)' },
+          }
+
+          if (!pm || methods.length === 0) {
+            return (
+              <Card>
+                <CardContent className="h-[300px] flex items-center justify-center text-muted-foreground">
+                  Ma'lumot topilmadi
+                </CardContent>
+              </Card>
+            )
+          }
+
+          return (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader className="pb-0">
+                  <CardTitle className="text-base">Daromad Taqsimoti</CardTitle>
+                  <CardDescription>To'lov usullari bo'yicha ulush</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer config={chartConfig} className="mx-auto h-[240px]">
+                    <PieChart>
+                      <ChartTooltip
+                        cursor={false}
+                        content={
+                          <ChartTooltipContent
+                            hideLabel
+                            formatter={(value: number | string) => [formatUZS(Number(value)), '']}
+                          />
+                        }
+                      />
+                      <Pie data={chartMethods} dataKey="value" nameKey="name" innerRadius={68} outerRadius={100} strokeWidth={2}>
+                        <Label
+                          content={({ viewBox }) => {
+                            if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                              return (
+                                <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
+                                  <tspan x={viewBox.cx} y={viewBox.cy} style={{ fontSize: 22, fontWeight: 700, fill: 'var(--foreground)' }}>
+                                    {formatShort(total)}
+                                  </tspan>
+                                  <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 22} style={{ fontSize: 11, fill: 'var(--muted-foreground)' }}>
+                                    UZS
+                                  </tspan>
+                                </text>
+                              )
+                            }
+                          }}
+                        />
+                      </Pie>
+                    </PieChart>
+                  </ChartContainer>
+                  {cashData && (
+                    <div className="mt-2 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                      <span className="h-2 w-2 rounded-full bg-[var(--color-chart-3)]" />
+                      <span>Naqd pul: <span className="font-medium text-foreground">{formatUZS(cashData.value)}</span> · {cashData.count} ta</span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <div className="flex flex-col gap-3 justify-center">
+                {methods.map((method) => {
+                  const pct = total > 0 ? Math.round((method.value / total) * 100) : 0
+                  return (
+                    <div key={method.name} className="rounded-xl border bg-card p-4 flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: method.fill }} />
+                          <span className="font-semibold text-sm">{method.name}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">{method.count} ta tranzaksiya</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-base font-bold">{formatUZS(method.value)}</span>
+                        <span className="text-sm font-semibold" style={{ color: method.fill }}>{pct}%</span>
+                      </div>
+                      <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: method.fill }} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })()}
       </TabsContent>
     </Tabs>
   )
