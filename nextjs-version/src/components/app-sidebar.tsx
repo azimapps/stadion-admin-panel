@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Wifi,
   Bell,
+  ShoppingBag,
 } from "lucide-react"
 import Link from "next/link"
 import { Logo } from "@/components/logo"
@@ -70,6 +71,11 @@ const data = {
           title: "Turnirlar",
           url: "/tournaments",
           icon: Trophy,
+        },
+        {
+          title: "Do'kon",
+          url: "/marketplace",
+          icon: ShoppingBag,
         },
       ],
     },
