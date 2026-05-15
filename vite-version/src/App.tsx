@@ -2,6 +2,7 @@ import { BrowserRouter as Router } from 'react-router-dom'
 import { ThemeProvider } from '@/components/theme-provider'
 import { SidebarConfigProvider } from '@/contexts/sidebar-context'
 import { AppRouter } from '@/components/router/app-router'
+import { Toaster } from '@/components/ui/sonner'
 import { useEffect } from 'react'
 import { initGTM } from '@/utils/analytics'
 
@@ -21,6 +22,7 @@ function App() {
           <Router basename={basename}>
             <AppRouter />
           </Router>
+          <Toaster richColors closeButton position="top-right" />
         </SidebarConfigProvider>
       </ThemeProvider>
     </div>

@@ -44,6 +44,12 @@
 
 :root {
   --font-inter: 'Inter', system-ui, sans-serif;
+  --font-display: 'Big Shoulders Display', 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  /* Marketplace-scoped accent: vivid stadion orange */
+  --mkt-accent: oklch(0.66 0.21 38);
+  --mkt-accent-soft: oklch(0.94 0.06 60);
+  --mkt-ink: oklch(0.13 0 0);
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -79,6 +85,9 @@
 }
 
 .dark {
+  --mkt-accent: oklch(0.72 0.2 40);
+  --mkt-accent-soft: oklch(0.28 0.09 50);
+  --mkt-ink: oklch(0.98 0 0);
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -172,3 +181,76 @@ html {
 .animate-logo-scroll:hover {
   animation-play-state: paused;
 }
+
+/* ===== Marketplace aesthetic primitives ===== */
+.mkt-display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 0.88;
+  text-transform: uppercase;
+}
+.mkt-eyebrow {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
+.mkt-mono {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum" 1, "zero" 1;
+}
+.mkt-accent { color: var(--mkt-accent); }
+.mkt-accent-bg { background-color: var(--mkt-accent); }
+.mkt-accent-ring { box-shadow: inset 0 0 0 1px var(--mkt-accent); }
+
+.mkt-card {
+  position: relative;
+  isolation: isolate;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0.875rem;
+  overflow: hidden;
+  transition: transform 220ms cubic-bezier(.2,.8,.2,1), box-shadow 220ms, border-color 220ms;
+}
+.mkt-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklch, var(--mkt-accent) 35%, var(--border));
+  box-shadow: 0 14px 40px -22px color-mix(in oklch, var(--mkt-accent) 60%, transparent);
+}
+
+.mkt-grid-bg {
+  background-image:
+    linear-gradient(to right, color-mix(in oklch, var(--border) 70%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklch, var(--border) 70%, transparent) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+@keyframes mkt-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.mkt-rise { animation: mkt-rise 480ms cubic-bezier(.2,.8,.2,1) both; }
+.mkt-rise-1 { animation-delay: 40ms; }
+.mkt-rise-2 { animation-delay: 90ms; }
+.mkt-rise-3 { animation-delay: 140ms; }
+.mkt-rise-4 { animation-delay: 190ms; }
+.mkt-rise-5 { animation-delay: 240ms; }
+
+@keyframes mkt-pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: .35; transform: scale(.85); }
+}
+.mkt-pulse-dot { animation: mkt-pulse-dot 1.6s ease-in-out infinite; }
+
+.mkt-marquee-track {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: mkt-marquee 22s linear infinite;
+}
+@keyframes mkt-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+

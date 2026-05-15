@@ -10,6 +10,9 @@ const Tasks = lazy(() => import('@/app/tasks/page'))
 const Chat = lazy(() => import('@/app/chat/page'))
 const Calendar = lazy(() => import('@/app/calendar/page'))
 const Users = lazy(() => import('@/app/users/page'))
+const Marketplace = lazy(() => import('@/app/marketplace/page'))
+const MarketplaceNew = lazy(() => import('@/app/marketplace/new/page'))
+const MarketplaceEdit = lazy(() => import('@/app/marketplace/edit/page'))
 const FAQs = lazy(() => import('@/app/faqs/page'))
 const Pricing = lazy(() => import('@/app/pricing/page'))
 
@@ -91,6 +94,18 @@ export const routes: RouteConfig[] = [
   {
     path: "/users",
     element: <Users />
+  },
+  {
+    path: "/marketplace",
+    element: <Marketplace />
+  },
+  {
+    path: "/marketplace/new",
+    element: <MarketplaceNew />
+  },
+  {
+    path: "/marketplace/:id",
+    element: <MarketplaceEdit />
   },
   {
     path: "/faqs",
