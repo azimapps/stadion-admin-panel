@@ -75,7 +75,7 @@ export default function MarketplaceNewPage() {
             toast.success("Mahsulot yaratildi", {
                 description: `“${created.title}” katalogga qo'shildi.`,
             })
-            router.push(`/marketplace/${created.id}`)
+            router.push("/marketplace")
         } catch (err) {
             toast.error(err instanceof Error ? err.message : "Yaratishda xatolik")
         } finally {

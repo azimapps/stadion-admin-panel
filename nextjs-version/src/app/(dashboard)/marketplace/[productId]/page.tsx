@@ -115,13 +115,12 @@ export default function MarketplaceEditPage() {
                 images,
             }
             const updated = await marketplaceService.update(product.id, payload)
-            setProduct(updated)
-            setFields(valuesFromProduct(updated))
-            setImages(updated.images || [])
-            toast.success("O'zgarishlar saqlandi")
+            toast.success("O'zgarishlar saqlandi", {
+                description: `“${updated.title}” yangilandi.`,
+            })
+            router.push("/marketplace")
         } catch (err) {
             toast.error(err instanceof Error ? err.message : "Saqlashda xatolik")
-        } finally {
             setSaving(false)
         }
     }
