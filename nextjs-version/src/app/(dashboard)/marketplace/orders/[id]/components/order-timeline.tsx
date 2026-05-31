@@ -27,85 +27,78 @@ export function OrderTimeline({ order }: OrderTimelineProps) {
     const steps = buildSteps(order)
 
     return (
-        <div className="rounded-2xl border border-border/50 bg-card/30 backdrop-blur-sm">
-            <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-border/40">
+        <div className="rounded-xl border bg-card overflow-hidden">
+            <div className="flex items-center justify-between gap-3 px-4 py-3 border-b">
                 <div className="flex items-center gap-2">
                     <Clock className="size-4 text-muted-foreground" />
-                    <div className="text-[10px] font-black uppercase tracking-[0.25em]">
-                        Buyurtma yo'li
-                    </div>
+                    <div className="text-sm font-semibold">Buyurtma yo'li</div>
                 </div>
-                <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
+                <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
                     {formatRelativeTime(order.updated_at)}
                 </div>
             </div>
 
-            <ol className="relative px-5 py-5">
+            <ol className="relative p-4 space-y-3">
                 <span
-                    className="absolute left-[40px] top-7 bottom-7 w-px bg-border/60"
+                    className="absolute left-[28px] top-7 bottom-7 w-px bg-border"
                     aria-hidden
                 />
-                {steps.map((step, i) => (
+                {steps.map((step) => (
                     <li
                         key={step.id}
-                        className={cn(
-                            "relative grid grid-cols-[40px_1fr_auto] items-start gap-3 pb-5 last:pb-0"
-                        )}
+                        className="relative grid grid-cols-[24px_1fr_auto] items-start gap-3"
                     >
                         <div
                             className={cn(
-                                "relative z-10 size-10 rounded-full grid place-items-center ring-4 ring-background transition-colors",
+                                "relative z-10 size-6 rounded-full grid place-items-center ring-4 ring-card transition-colors",
                                 step.state === "done"
-                                    ? `${step.accent} text-white shadow-md`
+                                    ? `${step.accent} text-white`
                                     : step.state === "active"
-                                      ? `${step.accent} text-white shadow-md`
+                                      ? `${step.accent} text-white`
                                       : step.state === "cancelled"
                                         ? "bg-rose-500 text-white"
-                                        : "bg-muted text-muted-foreground/60 ring-background"
+                                        : "bg-muted text-muted-foreground"
                             )}
                         >
-                            <step.icon className="size-4" />
+                            <step.icon className="size-3" />
                             {step.state === "active" && (
-                                <span className="absolute inset-0 rounded-full animate-ping opacity-40 bg-current" />
+                                <span
+                                    className={cn(
+                                        "absolute inset-0 rounded-full animate-ping opacity-40",
+                                        step.accent
+                                    )}
+                                />
                             )}
                         </div>
-                        <div className="flex flex-col gap-0.5 min-w-0 pt-1">
+                        <div className="flex flex-col gap-0.5 min-w-0">
                             <div
                                 className={cn(
-                                    "font-black italic uppercase tracking-tight text-sm",
+                                    "text-sm font-medium leading-tight",
                                     step.state === "pending"
-                                        ? "text-muted-foreground/60"
+                                        ? "text-muted-foreground"
                                         : "text-foreground"
                                 )}
                             >
                                 {step.label}
                             </div>
-                            <div className="text-[10px] font-medium text-muted-foreground/80 italic">
-                                {step.sublabel}
-                            </div>
+                            <div className="text-[11px] text-muted-foreground">{step.sublabel}</div>
                         </div>
-                        <div className="text-right pt-1">
+                        <div className="text-right">
                             {step.timestamp ? (
                                 <>
-                                    <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 tabular-nums">
+                                    <div className="text-[11px] text-foreground tabular-nums">
                                         {formatRelativeTime(step.timestamp)}
                                     </div>
-                                    <div className="text-[9px] text-muted-foreground/60 tabular-nums mt-0.5">
+                                    <div className="text-[10px] text-muted-foreground tabular-nums mt-0.5">
                                         {formatDateTime(step.timestamp)}
                                     </div>
                                 </>
                             ) : (
-                                <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
+                                <div className="text-[11px] text-muted-foreground">
                                     {step.state === "cancelled" ? "—" : "Kutilmoqda"}
                                 </div>
                             )}
                         </div>
-                        {i < steps.length - 1 && step.state === "done" && (
-                            <span
-                                className="absolute left-5 top-10 bottom-0 w-px bg-emerald-500/40"
-                                aria-hidden
-                            />
-                        )}
                     </li>
                 ))}
             </ol>
@@ -142,7 +135,7 @@ function buildSteps(order: MarketplaceOrder): Step[] {
             timestamp: order.created_at,
             state: "done",
             icon: Hourglass,
-            accent: "bg-zinc-700 dark:bg-zinc-300 dark:text-zinc-900",
+            accent: "bg-zinc-600 dark:bg-zinc-400",
         },
         {
             id: "prepaid",

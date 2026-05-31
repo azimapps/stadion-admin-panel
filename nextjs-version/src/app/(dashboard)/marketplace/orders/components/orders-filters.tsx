@@ -37,15 +37,15 @@ export function OrdersFilters({
     const isFiltered = search !== "" || statusFilter !== "all"
 
     return (
-        <div className="flex flex-col gap-3 rounded-2xl border border-border/50 bg-card/30 backdrop-blur-sm p-3 sm:p-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-3 rounded-xl border bg-card p-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/60" />
+                    <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                         placeholder="Telefon, ism yoki #ID bo'yicha qidiruv..."
                         value={search}
                         onChange={(e) => onSearchChange(e.target.value)}
-                        className="pl-9 h-10 rounded-xl"
+                        className="pl-9 h-9 rounded-lg"
                     />
                     {search && (
                         <button
@@ -60,18 +60,18 @@ export function OrdersFilters({
 
                 <div className="flex items-center justify-between gap-2 sm:justify-end">
                     {isFiltered && (
-                        <Button variant="ghost" size="sm" onClick={onReset} className="cursor-pointer">
+                        <Button variant="ghost" size="sm" onClick={onReset} className="cursor-pointer h-8">
                             <X className="mr-1 size-3.5" />
                             Tozalash
                         </Button>
                     )}
-                    <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 whitespace-nowrap tabular-nums">
+                    <div className="text-xs text-muted-foreground whitespace-nowrap tabular-nums">
                         {resultCount} / {totalCount}
                     </div>
                 </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+            <div className="flex flex-wrap items-center gap-1.5">
                 <StatusChip
                     active={statusFilter === "all"}
                     onClick={() => onStatusFilterChange("all")}
@@ -80,15 +80,14 @@ export function OrdersFilters({
                 />
                 {ORDER_STATUS_ORDER.map((status) => {
                     const tone = orderStatusTone(status)
-                    const count = counts[status] ?? 0
                     return (
                         <StatusChip
                             key={status}
                             active={statusFilter === status}
                             onClick={() => onStatusFilterChange(status)}
                             label={ORDER_STATUS_LABEL[status]}
-                            count={count}
-                            tone={tone}
+                            count={counts[status] ?? 0}
+                            dot={tone.dot}
                         />
                     )
                 })}
@@ -97,23 +96,15 @@ export function OrdersFilters({
                     onClick={() => onStatusFilterChange("cancelled")}
                     label={ORDER_STATUS_LABEL.cancelled}
                     count={counts.cancelled ?? 0}
-                    tone={orderStatusTone("cancelled")}
+                    dot="bg-rose-500"
                 />
-                <span className="hidden sm:inline-block w-px h-5 bg-border/70 mx-1" />
+                <span className="hidden sm:inline-block w-px h-5 bg-border mx-1" />
                 <StatusChip
                     active={statusFilter === "needs_refund"}
                     onClick={() => onStatusFilterChange("needs_refund")}
                     label="Pul qaytarish"
                     count={counts.needs_refund ?? 0}
                     icon={<BadgeAlert className="size-3" />}
-                    tone={{
-                        dot: "bg-amber-500",
-                        text: "text-amber-600 dark:text-amber-300",
-                        ring: "ring-amber-500/40",
-                        bg: "bg-amber-500",
-                        softBg: "bg-amber-500/15",
-                        accentText: "text-amber-500",
-                    }}
                 />
             </div>
         </div>
@@ -125,43 +116,26 @@ interface StatusChipProps {
     onClick: () => void
     label: string
     count: number
-    tone?: {
-        dot: string
-        text: string
-        ring: string
-        bg: string
-        softBg: string
-        accentText: string
-    }
+    dot?: string
     icon?: React.ReactNode
 }
 
-function StatusChip({ active, onClick, label, count, tone, icon }: StatusChipProps) {
+function StatusChip({ active, onClick, label, count, dot, icon }: StatusChipProps) {
     return (
         <button
             onClick={onClick}
             className={cn(
-                "group cursor-pointer inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] transition-all border",
+                "cursor-pointer inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium border transition-colors",
                 active
-                    ? "border-foreground bg-foreground text-background shadow-sm"
-                    : "border-border/60 bg-background/40 hover:bg-background hover:border-border text-foreground/70 hover:text-foreground"
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border bg-background hover:bg-accent text-foreground"
             )}
         >
-            {icon
-                ? icon
-                : tone && (
-                      <span
-                          className={cn(
-                              "inline-block size-1.5 rounded-full transition-transform",
-                              tone.dot,
-                              active && "scale-110"
-                          )}
-                      />
-                  )}
+            {icon ?? (dot && <span className={cn("inline-block size-1.5 rounded-full", dot)} />)}
             <span>{label}</span>
             <span
                 className={cn(
-                    "tabular-nums text-[9px] tracking-normal px-1 rounded-full",
+                    "tabular-nums text-[10px] px-1 rounded",
                     active ? "bg-background/20 text-background" : "bg-muted text-muted-foreground"
                 )}
             >

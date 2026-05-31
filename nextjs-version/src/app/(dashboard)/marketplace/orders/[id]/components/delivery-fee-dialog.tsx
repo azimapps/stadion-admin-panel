@@ -67,8 +67,8 @@ export function DeliveryFeeDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle className="font-black italic uppercase tracking-tighter text-2xl flex items-center gap-2">
-                        <Tag className="size-5 text-sky-500" />
+                    <DialogTitle className="text-lg font-semibold flex items-center gap-2">
+                        <Tag className="size-4 text-sky-500" />
                         Yetkazish narxi
                     </DialogTitle>
                     <DialogDescription>
@@ -79,7 +79,7 @@ export function DeliveryFeeDialog({
 
                 <div className="flex flex-col gap-4 py-2">
                     <div className="space-y-2">
-                        <Label htmlFor="fee" className="text-[10px] font-black uppercase tracking-widest">
+                        <Label htmlFor="fee" className="text-xs font-medium">
                             Yetkazish narxi (UZS)
                         </Label>
                         <Input
@@ -90,7 +90,7 @@ export function DeliveryFeeDialog({
                             step={1000}
                             value={Number.isFinite(fee) ? fee : ""}
                             onChange={(e) => setFee(Math.max(0, Math.floor(Number(e.target.value) || 0)))}
-                            className="h-12 rounded-xl text-lg font-black italic tabular-nums"
+                            className="h-11 rounded-lg text-base font-semibold tabular-nums"
                             autoFocus
                         />
                         <div className="flex flex-wrap items-center gap-1.5 pt-1">
@@ -99,10 +99,10 @@ export function DeliveryFeeDialog({
                                     key={amount}
                                     type="button"
                                     onClick={() => setFee(amount)}
-                                    className={`cursor-pointer rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest border transition-all ${
+                                    className={`cursor-pointer rounded-md px-2.5 py-1 text-xs font-medium border transition-colors ${
                                         fee === amount
                                             ? "border-foreground bg-foreground text-background"
-                                            : "border-border/60 bg-background/40 hover:border-border text-muted-foreground hover:text-foreground"
+                                            : "border-border bg-background hover:bg-accent text-muted-foreground hover:text-foreground"
                                     }`}
                                 >
                                     {amount === 0 ? "Bepul" : `${formatUZS(amount)}`}
@@ -111,10 +111,10 @@ export function DeliveryFeeDialog({
                         </div>
                     </div>
 
-                    <div className="rounded-xl bg-muted/40 p-3 grid grid-cols-3 gap-3">
+                    <div className="rounded-lg border bg-muted/30 p-3 grid grid-cols-3 gap-3">
                         <Stat label="Mahsulot" value={itemsTotal} />
                         <Stat label="Yangi jami" value={totalAfter} accent="text-foreground" bold />
-                        <Stat label="Kuryer naqd" value={remainingAfter} accent="text-amber-500" bold />
+                        <Stat label="Kuryer naqd" value={remainingAfter} accent="text-amber-600 dark:text-amber-400" bold />
                     </div>
 
                     {error && (
@@ -127,14 +127,14 @@ export function DeliveryFeeDialog({
                         variant="outline"
                         onClick={() => onOpenChange(false)}
                         disabled={submitting}
-                        className="cursor-pointer rounded-xl"
+                        className="cursor-pointer rounded-lg"
                     >
                         Bekor
                     </Button>
                     <Button
                         onClick={submit}
                         disabled={submitting}
-                        className="cursor-pointer rounded-xl bg-sky-500 hover:bg-sky-600 text-white"
+                        className="cursor-pointer rounded-lg bg-sky-500 hover:bg-sky-600 text-white"
                     >
                         {submitting ? (
                             <>
@@ -164,11 +164,9 @@ function Stat({
 }) {
     return (
         <div className="flex flex-col gap-0.5">
-            <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/70">
-                {label}
-            </div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
             <div
-                className={`tabular-nums leading-none ${bold ? "font-black italic text-base" : "font-bold text-sm"} ${accent}`}
+                className={`tabular-nums ${bold ? "font-semibold text-sm" : "font-medium text-xs"} ${accent}`}
             >
                 {formatUZS(value)}
             </div>

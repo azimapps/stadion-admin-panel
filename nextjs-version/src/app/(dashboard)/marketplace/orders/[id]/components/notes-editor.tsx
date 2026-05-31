@@ -37,16 +37,14 @@ export function NotesEditor({ value, onSave }: NotesEditorProps) {
     const reset = () => setDraft(value ?? "")
 
     return (
-        <div className="rounded-2xl border border-border/50 bg-card/30 backdrop-blur-sm overflow-hidden">
-            <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-border/40">
+        <div className="rounded-xl border bg-card overflow-hidden">
+            <div className="flex items-center justify-between gap-3 px-4 py-3 border-b">
                 <div className="flex items-center gap-2">
                     <NotebookPen className="size-4 text-muted-foreground" />
-                    <div className="text-[10px] font-black uppercase tracking-[0.25em]">
-                        Admin eslatmasi
-                    </div>
+                    <div className="text-sm font-semibold">Admin eslatmasi</div>
                 </div>
-                <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
-                    Faqat ichki ko'rinish
+                <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                    Faqat ichki
                 </div>
             </div>
 
@@ -55,13 +53,15 @@ export function NotesEditor({ value, onSave }: NotesEditorProps) {
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
                     placeholder="Kuryer uchun ko'rsatma, qaytarish konteksti, xaridor izohi..."
-                    className="min-h-[110px] rounded-xl resize-none"
+                    className="min-h-[100px] rounded-lg resize-none"
                 />
                 {error && (
-                    <div className="text-xs text-destructive rounded-lg bg-destructive/10 px-3 py-2">{error}</div>
+                    <div className="text-xs text-destructive rounded-md bg-destructive/10 px-3 py-2">
+                        {error}
+                    </div>
                 )}
                 <div className="flex items-center justify-between gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 tabular-nums">
+                    <span className="text-xs text-muted-foreground tabular-nums">
                         {draft.length} ta belgi
                     </span>
                     <div className="flex items-center gap-2">
@@ -71,7 +71,7 @@ export function NotesEditor({ value, onSave }: NotesEditorProps) {
                                 size="sm"
                                 onClick={reset}
                                 disabled={saving}
-                                className="cursor-pointer"
+                                className="cursor-pointer h-8"
                             >
                                 <X className="mr-1 size-3.5" />
                                 Bekor
@@ -81,7 +81,7 @@ export function NotesEditor({ value, onSave }: NotesEditorProps) {
                             size="sm"
                             onClick={save}
                             disabled={!dirty || saving}
-                            className="cursor-pointer rounded-xl"
+                            className="cursor-pointer rounded-lg h-8"
                         >
                             {saving ? (
                                 <>

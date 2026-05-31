@@ -4,7 +4,6 @@ import { useState } from "react"
 import { toast } from "sonner"
 import {
     AlertTriangle,
-    BadgeCheck,
     Banknote,
     Hourglass,
     Loader2,
@@ -130,7 +129,7 @@ export function OrderActionBar({ order, onUpdated }: OrderActionBarProps) {
                     icon: Tag,
                     handler: () => setFeeOpen(true),
                     busy: busyKind === "fee",
-                    accent: "bg-sky-500 hover:bg-sky-600 text-white shadow-lg shadow-sky-500/30",
+                    accent: "bg-sky-500 hover:bg-sky-600 text-white",
                     disabled: false,
                 }
             case "confirmed":
@@ -139,7 +138,7 @@ export function OrderActionBar({ order, onUpdated }: OrderActionBarProps) {
                     icon: Truck,
                     handler: () => setConfirm("sent"),
                     busy: busyKind === "sent",
-                    accent: "bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30",
+                    accent: "bg-orange-500 hover:bg-orange-600 text-white",
                     disabled: false,
                 }
             case "delivery_sent":
@@ -148,7 +147,7 @@ export function OrderActionBar({ order, onUpdated }: OrderActionBarProps) {
                     icon: PackageCheck,
                     handler: () => setConfirm("delivered"),
                     busy: busyKind === "delivered",
-                    accent: "bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30",
+                    accent: "bg-emerald-500 hover:bg-emerald-600 text-white",
                     disabled: false,
                 }
             default:
@@ -160,79 +159,72 @@ export function OrderActionBar({ order, onUpdated }: OrderActionBarProps) {
     const showRefundClear = order.needs_refund
 
     return (
-        <div className="rounded-2xl border border-border/50 bg-card/30 backdrop-blur-sm p-4 sm:p-5 flex flex-col gap-3">
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/80">
-                <BadgeCheck className="size-3.5" />
-                Keyingi qadam
-            </div>
+        <div className="rounded-xl border bg-card p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            {primaryAction ? (
+                <Button
+                    size="lg"
+                    onClick={primaryAction.handler ?? undefined}
+                    disabled={primaryAction.disabled || primaryAction.busy}
+                    className={cn(
+                        "cursor-pointer rounded-lg h-11 px-5 font-medium transition-colors flex-1 sm:flex-none sm:min-w-[260px]",
+                        primaryAction.accent
+                    )}
+                >
+                    {primaryAction.busy ? (
+                        <>
+                            <Loader2 className="mr-2 size-4 animate-spin" />
+                            Bajarilmoqda...
+                        </>
+                    ) : (
+                        <>
+                            <primaryAction.icon className="mr-2 size-4" />
+                            {primaryAction.label}
+                        </>
+                    )}
+                </Button>
+            ) : (
+                <div className="flex-1 rounded-lg bg-muted/40 px-4 py-3 flex items-center gap-2 text-sm text-muted-foreground">
+                    <PackageCheck className="size-4" />
+                    {order.status === "delivery_completed"
+                        ? "Buyurtma muvaffaqiyatli yakunlandi."
+                        : "Bekor qilingan buyurtma."}
+                </div>
+            )}
 
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                {primaryAction ? (
+            <div className="flex items-center gap-2 sm:ml-auto">
+                {showRefundClear && (
                     <Button
+                        variant="outline"
                         size="lg"
-                        onClick={primaryAction.handler ?? undefined}
-                        disabled={primaryAction.disabled || primaryAction.busy}
-                        className={cn(
-                            "cursor-pointer rounded-xl h-12 px-6 font-black italic tracking-tight transition-all active:scale-[0.98] flex-1 sm:flex-none sm:min-w-[280px]",
-                            primaryAction.accent
-                        )}
+                        onClick={() => setConfirm("refund")}
+                        disabled={busyKind === "refund"}
+                        className="cursor-pointer rounded-lg h-11 border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
                     >
-                        {primaryAction.busy ? (
-                            <>
-                                <Loader2 className="mr-2 size-4 animate-spin" />
-                                Bajarilmoqda...
-                            </>
+                        {busyKind === "refund" ? (
+                            <Loader2 className="mr-1.5 size-3.5 animate-spin" />
                         ) : (
-                            <>
-                                <primaryAction.icon className="mr-2 size-4 stroke-[2.5]" />
-                                {primaryAction.label}
-                            </>
+                            <Banknote className="mr-1.5 size-3.5" />
                         )}
+                        Refund tugadi
                     </Button>
-                ) : (
-                    <div className="rounded-xl border border-border/40 bg-background/50 px-4 py-3 flex items-center gap-2 text-sm text-muted-foreground italic">
-                        <BadgeCheck className="size-4" />
-                        {order.status === "delivery_completed"
-                            ? "Buyurtma muvaffaqiyatli yakunlandi."
-                            : "Bekor qilingan buyurtma. Faqat eslatma va pul qaytarish boshqaruvi mavjud."}
-                    </div>
                 )}
 
-                <div className="flex items-center gap-2 sm:ml-auto">
-                    {showRefundClear && (
-                        <Button
-                            variant="outline"
-                            size="lg"
-                            onClick={() => setConfirm("refund")}
-                            disabled={busyKind === "refund"}
-                            className="cursor-pointer rounded-xl h-12 border-amber-500/40 text-amber-600 dark:text-amber-300 hover:bg-amber-500/10 hover:border-amber-500/60"
-                        >
-                            {busyKind === "refund" ? (
-                                <Loader2 className="mr-1.5 size-3.5 animate-spin" />
-                            ) : (
-                                <Banknote className="mr-1.5 size-3.5" />
-                            )}
-                            Refund tugadi
-                        </Button>
-                    )}
-
-                    {canCancel && (
-                        <Button
-                            variant="outline"
-                            size="lg"
-                            onClick={() => setConfirm("cancel")}
-                            disabled={busyKind === "cancel"}
-                            className="cursor-pointer rounded-xl h-12 border-destructive/40 text-destructive hover:bg-destructive/10 hover:border-destructive/60"
-                        >
-                            {busyKind === "cancel" ? (
-                                <Loader2 className="mr-1.5 size-3.5 animate-spin" />
-                            ) : (
-                                <XCircle className="mr-1.5 size-3.5" />
-                            )}
-                            Bekor qilish
-                        </Button>
-                    )}
-                </div>
+                {canCancel && (
+                    <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={() => setConfirm("cancel")}
+                        disabled={busyKind === "cancel"}
+                        className="cursor-pointer rounded-lg h-11 border-destructive/40 text-destructive hover:bg-destructive/10"
+                    >
+                        {busyKind === "cancel" ? (
+                            <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                        ) : (
+                            <XCircle className="mr-1.5 size-3.5" />
+                        )}
+                        Bekor qilish
+                    </Button>
+                )}
             </div>
 
             <DeliveryFeeDialog
@@ -279,7 +271,6 @@ export function OrderActionBar({ order, onUpdated }: OrderActionBarProps) {
                 confirmLabel="Ha, bekor qilinsin"
                 onConfirm={handleCancel}
                 loading={busyKind === "cancel"}
-                destructive
             />
             <ConfirmDialog
                 open={confirm === "refund"}
@@ -306,7 +297,6 @@ interface ConfirmDialogProps {
     onConfirm: () => Promise<void> | void
     loading: boolean
     tone: "emerald" | "orange" | "rose" | "amber"
-    destructive?: boolean
 }
 
 function ConfirmDialog({
@@ -319,78 +309,67 @@ function ConfirmDialog({
     onConfirm,
     loading,
     tone,
-    destructive,
 }: ConfirmDialogProps) {
     const toneClasses = {
         emerald: {
-            bg: "bg-emerald-500/10",
-            iconBg: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+            iconBg: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
             button: "bg-emerald-500 hover:bg-emerald-600 text-white",
         },
         orange: {
-            bg: "bg-orange-500/10",
-            iconBg: "bg-orange-500/15 text-orange-600 dark:text-orange-400",
+            iconBg: "bg-orange-500/10 text-orange-600 dark:text-orange-400",
             button: "bg-orange-500 hover:bg-orange-600 text-white",
         },
         rose: {
-            bg: "bg-rose-500/5",
-            iconBg: "bg-rose-500/15 text-rose-600 dark:text-rose-400",
+            iconBg: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
             button: "bg-rose-600 hover:bg-rose-700 text-white",
         },
         amber: {
-            bg: "bg-amber-500/10",
-            iconBg: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+            iconBg: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
             button: "bg-amber-500 hover:bg-amber-600 text-white",
         },
     }[tone]
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-md p-0 overflow-hidden border-none shadow-2xl">
-                <div className={cn("p-6", toneClasses.bg)}>
-                    <DialogHeader className="mb-3">
-                        <div className="flex items-center gap-3">
-                            <div className={cn("size-10 rounded-xl flex items-center justify-center", toneClasses.iconBg)}>
-                                <Icon className="size-5" />
-                            </div>
-                            <DialogTitle className="text-xl font-black italic tracking-tight">{title}</DialogTitle>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <div className="flex items-center gap-3">
+                        <div className={cn("size-9 rounded-lg flex items-center justify-center", toneClasses.iconBg)}>
+                            <Icon className="size-4" />
                         </div>
-                        <DialogDescription className="text-muted-foreground mt-3 leading-relaxed">
-                            {description}
-                        </DialogDescription>
-                    </DialogHeader>
+                        <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
+                    </div>
+                    <DialogDescription className="text-muted-foreground mt-2 leading-relaxed">
+                        {description}
+                    </DialogDescription>
+                </DialogHeader>
 
-                    <DialogFooter className="flex flex-row justify-end gap-3 pt-2 sm:justify-end">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => onOpenChange(false)}
-                            className="cursor-pointer rounded-xl px-6 h-11"
-                            disabled={loading}
-                        >
-                            Bekor
-                        </Button>
-                        <Button
-                            type="button"
-                            onClick={onConfirm}
-                            disabled={loading}
-                            className={cn(
-                                "cursor-pointer rounded-xl px-6 h-11 font-black tracking-tight transition-all active:scale-95",
-                                toneClasses.button,
-                                destructive && "shadow-lg shadow-rose-500/30"
-                            )}
-                        >
-                            {loading ? (
-                                <>
-                                    <Loader2 className="mr-1.5 size-3.5 animate-spin" />
-                                    Bajarilmoqda...
-                                </>
-                            ) : (
-                                confirmLabel
-                            )}
-                        </Button>
-                    </DialogFooter>
-                </div>
+                <DialogFooter>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => onOpenChange(false)}
+                        className="cursor-pointer rounded-lg"
+                        disabled={loading}
+                    >
+                        Bekor
+                    </Button>
+                    <Button
+                        type="button"
+                        onClick={onConfirm}
+                        disabled={loading}
+                        className={cn("cursor-pointer rounded-lg", toneClasses.button)}
+                    >
+                        {loading ? (
+                            <>
+                                <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                                Bajarilmoqda...
+                            </>
+                        ) : (
+                            confirmLabel
+                        )}
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     )

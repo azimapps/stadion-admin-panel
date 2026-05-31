@@ -11,7 +11,7 @@ import {
     type MarketplaceOrder,
     type OrderStatus,
 } from "@/services/marketplace-order"
-import { OrdersHero } from "./components/orders-hero"
+import { OrdersHeader } from "./components/orders-header"
 import { OrdersFilters, type StatusFilter } from "./components/orders-filters"
 import { OrderCard } from "./components/order-card"
 import { OrdersEmpty } from "./components/orders-empty"
@@ -93,9 +93,9 @@ export default function MarketplaceOrdersPage() {
     return (
         <div className="flex flex-col gap-6 py-2 px-4 lg:px-6">
             {loading && orders.length === 0 ? (
-                <Skeleton className="h-[320px] w-full rounded-3xl" />
+                <Skeleton className="h-[120px] w-full rounded-xl" />
             ) : (
-                <OrdersHero orders={orders} />
+                <OrdersHeader orders={orders} />
             )}
 
             {error && (

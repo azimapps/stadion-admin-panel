@@ -46,43 +46,26 @@ export function OrderCard({ order }: OrderCardProps) {
     return (
         <Link
             href={`/marketplace/orders/${order.id}`}
-            className={cn(
-                "group relative flex flex-col gap-4 rounded-2xl border bg-card/30 backdrop-blur-sm p-4 transition-all hover:-translate-y-0.5 hover:shadow-lg overflow-hidden",
-                "border-border/50 hover:border-foreground/30"
-            )}
+            className="group relative flex flex-col gap-3 rounded-xl border bg-card p-4 transition-colors hover:bg-accent/30 hover:border-foreground/20"
         >
-            <span
-                className={cn(
-                    "absolute inset-x-0 top-0 h-[3px] rounded-t-2xl",
-                    tone.bg
-                )}
-                aria-hidden
-            />
-
             <div className="flex items-start justify-between gap-3">
-                <div className="flex flex-col gap-1">
-                    <div className="flex items-baseline gap-2">
-                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/60">
-                            #
-                        </span>
-                        <span className="font-black italic tabular-nums text-2xl tracking-tighter leading-none">
-                            {order.id}
-                        </span>
-                    </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
+                <div className="flex items-baseline gap-2">
+                    <span className="text-xs text-muted-foreground">#</span>
+                    <span className="text-lg font-semibold tabular-nums">{order.id}</span>
+                    <span className="text-xs text-muted-foreground ml-1">
                         {formatRelativeTime(order.created_at)}
                     </span>
                 </div>
-                <div className="flex flex-col items-end gap-1.5">
-                    <OrderStatusPill status={order.status} short glow={order.status === "prepaid"} />
+                <div className="flex items-center gap-1.5">
                     {order.needs_refund && <NeedsRefundBadge />}
+                    <OrderStatusPill status={order.status} short glow={order.status === "prepaid"} />
                 </div>
             </div>
 
             <div className="flex items-center gap-3">
-                <div className="flex -space-x-2">
+                <div className="flex -space-x-1.5">
                     {previewImages.length === 0 ? (
-                        <div className="size-12 rounded-xl bg-muted grid place-items-center text-muted-foreground/40 ring-2 ring-background">
+                        <div className="size-10 rounded-lg bg-muted grid place-items-center text-muted-foreground/40 ring-2 ring-card">
                             <ImageOff className="size-4" />
                         </div>
                     ) : (
@@ -92,13 +75,13 @@ export function OrderCard({ order }: OrderCardProps) {
                                 key={i}
                                 src={src}
                                 alt=""
-                                className="size-12 rounded-xl object-cover ring-2 ring-background"
+                                className="size-10 rounded-lg object-cover ring-2 ring-card"
                             />
                         ))
                     )}
                 </div>
-                <div className="flex flex-col gap-0.5 min-w-0">
-                    <div className="font-black italic text-base tracking-tight truncate">
+                <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                    <div className="text-sm font-medium truncate">
                         {order.buyer_fullname || "Noma'lum xaridor"}
                     </div>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground tabular-nums">
@@ -106,37 +89,29 @@ export function OrderCard({ order }: OrderCardProps) {
                         <span className="truncate">{order.buyer_phone}</span>
                     </div>
                 </div>
-                <div className="ml-auto text-right shrink-0">
-                    <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
+                <div className="text-right shrink-0">
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
                         Mahsulot
                     </div>
-                    <div className="font-black italic text-base tabular-nums">{itemCount}</div>
+                    <div className="text-sm font-semibold tabular-nums">{itemCount}</div>
                 </div>
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-muted-foreground/80">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <MapPin className="size-3 shrink-0" />
-                <span className="truncate italic">{order.address_text}</span>
+                <span className="truncate">{order.address_text}</span>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border/40">
-                <MoneyCol
-                    label="Mahsulot"
-                    value={order.items_total}
-                    accent="text-foreground"
-                />
-                <MoneyCol
-                    label="To'langan"
-                    value={order.paid_amount}
-                    accent="text-emerald-500"
-                />
+            <div className="grid grid-cols-3 gap-3 pt-3 border-t">
+                <MoneyCol label="Mahsulot" value={order.items_total} />
+                <MoneyCol label="To'langan" value={order.paid_amount} accent="text-emerald-600 dark:text-emerald-400" />
                 <MoneyCol
                     label="Qoldiq"
                     value={order.remaining_amount}
                     accent={
                         order.remaining_amount && order.remaining_amount > 0
-                            ? "text-amber-500"
-                            : "text-muted-foreground/50"
+                            ? "text-amber-600 dark:text-amber-400"
+                            : "text-muted-foreground"
                     }
                 />
             </div>
@@ -144,27 +119,23 @@ export function OrderCard({ order }: OrderCardProps) {
             {action && (
                 <div
                     className={cn(
-                        "flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 ring-1 transition-all",
+                        "flex items-center justify-between gap-2 -mx-4 -mb-4 mt-1 px-4 py-2.5 border-t transition-colors",
                         action.kind === "wait-buyer"
-                            ? "bg-muted/40 ring-border/40"
-                            : `${tone.softBg} ${tone.ring}`
+                            ? "bg-muted/30"
+                            : `${tone.softBg}`
                     )}
                 >
                     <div className="flex items-center gap-2 min-w-0">
                         <ActionIcon
                             className={cn(
                                 "size-3.5 shrink-0",
-                                action.kind === "wait-buyer"
-                                    ? "text-muted-foreground"
-                                    : tone.accentText
+                                action.kind === "wait-buyer" ? "text-muted-foreground" : tone.accentText
                             )}
                         />
                         <span
                             className={cn(
-                                "text-[10px] font-black uppercase tracking-widest truncate",
-                                action.kind === "wait-buyer"
-                                    ? "text-muted-foreground"
-                                    : tone.text
+                                "text-xs font-medium truncate",
+                                action.kind === "wait-buyer" ? "text-muted-foreground" : tone.text
                             )}
                         >
                             {action.label}
@@ -173,9 +144,7 @@ export function OrderCard({ order }: OrderCardProps) {
                     <ArrowUpRight
                         className={cn(
                             "size-4 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5",
-                            action.kind === "wait-buyer"
-                                ? "text-muted-foreground"
-                                : tone.accentText
+                            action.kind === "wait-buyer" ? "text-muted-foreground" : tone.accentText
                         )}
                     />
                 </div>
@@ -187,20 +156,18 @@ export function OrderCard({ order }: OrderCardProps) {
 function MoneyCol({
     label,
     value,
-    accent,
+    accent = "text-foreground",
 }: {
     label: string
     value: number | null | undefined
-    accent: string
+    accent?: string
 }) {
     return (
         <div className="flex flex-col gap-0.5">
-            <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/70">
-                {label}
-            </div>
-            <div className={cn("font-black italic tabular-nums text-sm leading-none mt-0.5", accent)}>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+            <div className={cn("text-sm font-semibold tabular-nums", accent)}>
                 {formatUZS(value)}
-                <span className="ml-0.5 text-[8px] font-bold opacity-60 tracking-widest">UZS</span>
+                <span className="ml-0.5 text-[9px] text-muted-foreground/70">UZS</span>
             </div>
         </div>
     )
