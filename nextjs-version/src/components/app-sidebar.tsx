@@ -15,6 +15,7 @@ import {
   Wifi,
   Bell,
   ShoppingBag,
+  Receipt,
 } from "lucide-react"
 import Link from "next/link"
 import { Logo } from "@/components/logo"
@@ -76,6 +77,11 @@ const data = {
           title: "Do'kon",
           url: "/marketplace",
           icon: ShoppingBag,
+        },
+        {
+          title: "Buyurtmalar",
+          url: "/marketplace/orders",
+          icon: Receipt,
         },
       ],
     },

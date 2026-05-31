@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Plus, Sparkles } from "lucide-react"
+import { Plus, Sparkles, Receipt } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { formatUZS, type Product } from "@/services/marketplace"
 
@@ -51,6 +51,11 @@ export function MarketplaceHero({ products }: MarketplaceHeroProps) {
                         <Button asChild className="rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-95 px-6">
                             <Link href="/marketplace/new">
                                 <Plus className="mr-1.5 size-4 stroke-[2.5]" /> Yangi mahsulot
+                            </Link>
+                        </Button>
+                        <Button asChild variant="outline" className="rounded-xl active:scale-95 px-5 border-foreground/20 hover:border-foreground/40">
+                            <Link href="/marketplace/orders">
+                                <Receipt className="mr-1.5 size-4 stroke-[2.5]" /> Buyurtmalar
                             </Link>
                         </Button>
                         <div className="hidden sm:flex items-center gap-2 rounded-full border border-border/60 bg-background/60 backdrop-blur px-3 py-1.5">
