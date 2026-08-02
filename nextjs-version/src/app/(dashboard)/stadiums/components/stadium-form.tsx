@@ -423,6 +423,55 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
         media: ["main_image", "images"],
     }
 
+    // Human-readable labels used when a field has no specific zod message.
+    const FIELD_LABELS: Record<string, string> = {
+        name_uz: "Nomi (UZ)", name_ru: "Nomi (RU)", slug: "Slug",
+        description_uz: "Tavsif (UZ)", description_ru: "Tavsif (RU)",
+        address_uz: "Manzil (UZ)", address_ru: "Manzil (RU)",
+        latitude: "Xaritadan joylashuv", longitude: "Xaritadan joylashuv",
+        region_id: "Hudud", capacity: "Sig'imi", price_per_hour: "Narx",
+        discount_price_per_hour: "Chegirma narxi", phones: "Telefon raqam",
+        main_image: "Asosiy rasm", images: "Qo'shimcha rasmlar",
+        metro_station: "Metro bekati", metro_distance: "Metro masofasi",
+    }
+    const TAB_LABELS: Record<string, string> = {
+        media: "Media", main: "Asosiy", info: "Ma'lumotlar", location: "Manzil",
+    }
+
+    // Collect current validation errors, switch to the first offending tab, and
+    // show a toast that names exactly what needs fixing. Without this the
+    // Next/Save buttons appear to do nothing when a required field is missing.
+    const reportValidationErrors = (): boolean => {
+        const errs = form.formState.errors as Record<string, any>
+        const errorFields = Object.keys(errs)
+        if (errorFields.length === 0) return false
+
+        // Order offending tabs by the natural tab sequence.
+        const offendingTabs = tabs.filter((t) =>
+            tabFields[t].some((f) => errorFields.includes(f as string))
+        )
+        const firstTab = offendingTabs[0] ?? currentTab
+
+        const messages: string[] = []
+        for (const t of offendingTabs) {
+            for (const f of tabFields[t]) {
+                const err = errs[f as string]
+                if (!err) continue
+                const msg = typeof err.message === "string" && err.message
+                    ? err.message
+                    : (FIELD_LABELS[f as string] || (f as string))
+                messages.push(msg)
+            }
+        }
+        const unique = Array.from(new Set(messages)).slice(0, 6)
+
+        setCurrentTab(firstTab)
+        toast.error(`"${TAB_LABELS[firstTab]}" bo'limini to'ldiring`, {
+            description: unique.join(" • "),
+        })
+        return true
+    }
+
     const handleNext = async () => {
         const fields = tabFields[currentTab]
         const isValid = await form.trigger(fields as any)
@@ -432,6 +481,8 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
             if (currentIndex < tabs.length - 1) {
                 setCurrentTab(tabs[currentIndex + 1])
             }
+        } else {
+            reportValidationErrors()
         }
     }
 
@@ -447,16 +498,9 @@ export function StadiumForm({ initialData, onSubmit, loading }: StadiumFormProps
         const isValid = await form.trigger();
 
         if (!isValid) {
-            // Find which tab has error
-            for (const tab of tabs) {
-                const fields = tabFields[tab];
-                const isTabValid = await form.trigger(fields as any);
-                if (!isTabValid) {
-                    setCurrentTab(tab);
-                    // Optional: toast error
-                    return;
-                }
-            }
+            // Switch to the offending tab and tell the admin what's wrong.
+            reportValidationErrors();
+            return;
         }
 
         setShowSaveDialog(true);

@@ -77,7 +77,22 @@ class ApiClient {
       let errorMessage = `Request failed: ${response.status}`;
       try {
         const errorData = await response.json();
-        errorMessage = errorData.detail || errorData.message || errorMessage;
+        const detail = errorData.detail ?? errorData.message;
+        if (Array.isArray(detail)) {
+          // FastAPI 422 validation errors: detail is an array of { loc, msg }.
+          // Flatten to a readable string instead of "[object Object]".
+          errorMessage = detail
+            .map((e: { loc?: unknown[]; msg?: string }) => {
+              const field = Array.isArray(e.loc)
+                ? e.loc.filter((p) => p !== "body").join(".")
+                : "";
+              return field ? `${field}: ${e.msg}` : e.msg;
+            })
+            .filter(Boolean)
+            .join("; ") || errorMessage;
+        } else if (typeof detail === "string" && detail) {
+          errorMessage = detail;
+        }
       } catch {
         // ignore JSON parse error
       }

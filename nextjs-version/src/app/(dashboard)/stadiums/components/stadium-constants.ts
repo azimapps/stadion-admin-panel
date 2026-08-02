@@ -33,8 +33,8 @@ export const METRO_STATIONS = [
     { label: "Chilonzor", value: "Chilonzor" },
     { label: "Olmazor", value: "Olmazor" },
     { label: "Choshtepa", value: "Choshtepa" },
-    { label: "O'zgarish", value: "O'zgarish" },
-    { label: "Sirg'ali", value: "Sirg'ali" },
+    { label: "Oʻzgarish", value: "Oʻzgarish" },
+    { label: "Sirgʻali", value: "Sirgʻali" },
     { label: "Yangihayot", value: "Yangihayot" },
     { label: "Chinor", value: "Chinor" },
 
@@ -42,14 +42,14 @@ export const METRO_STATIONS = [
     { label: "Beruniy", value: "Beruniy" },
     { label: "Tinchlik", value: "Tinchlik" },
     { label: "Chorsu", value: "Chorsu" },
-    { label: "G'afur G'ulom", value: "G'afur G'ulom" },
+    { label: "Gʻafur Gʻulom", value: "Gʻafur Gʻulom" },
     { label: "Alisher Navoiy", value: "Alisher Navoiy" },
-    { label: "O'zbekiston", value: "O'zbekiston" },
+    { label: "Oʻzbekiston", value: "Oʻzbekiston" },
     { label: "Kosmonavtlar", value: "Kosmonavtlar" },
     { label: "Oybek", value: "Oybek" },
     { label: "Toshkent", value: "Toshkent" },
     { label: "Mashinasozlar", value: "Mashinasozlar" },
-    { label: "Do'stlik", value: "Do'stlik" },
+    { label: "Doʻstlik", value: "Doʻstlik" },
 
     // Yunusobod Line (Green Line)
     { label: "Turkiston", value: "Turkiston" },
@@ -59,7 +59,7 @@ export const METRO_STATIONS = [
     { label: "Minor", value: "Minor" },
     { label: "Abdulla Qodirii", value: "Abdulla Qodirii" },
     { label: "Yunus Rajabiy", value: "Yunus Rajabiy" },
-    { label: "Ming O'rik", value: "Ming O'rik" },
+    { label: "Ming Oʻrik", value: "Ming Oʻrik" },
 
     // Circle Line (O'ttiz Yillik Mustaqillik)
     { label: "Texnopark", value: "Texnopark" },
@@ -68,7 +68,7 @@ export const METRO_STATIONS = [
     { label: "Olmos", value: "Olmos" },
     { label: "Rohat", value: "Rohat" },
     { label: "Yangiobod", value: "Yangiobod" },
-    { label: "Qo'yliq", value: "Qo'yliq" },
+    { label: "Qoʻyliq", value: "Qoʻyliq" },
     { label: "Matonat", value: "Matonat" },
     { label: "Qiyot", value: "Qiyot" },
     { label: "Tolariq", value: "Tolariq" },
