@@ -6,12 +6,29 @@ import { AnalyticsTables } from "./components/analytics-tables"
 import { SectionCards } from "./components/section-cards"
 import { apiClient } from "@/lib/api-client"
 
+const fmtLocalDate = (d: Date) => {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${y}-${m}-${day}`
+}
+
+const defaultRangeFrom = () => {
+  const now = new Date()
+  const sep2 = new Date(now.getFullYear(), 8, 2)
+  return sep2 > now ? new Date(now.getFullYear() - 1, 8, 2) : sep2
+}
+
 export default function Page() {
   const [currentDate, setCurrentDate] = React.useState(new Date())
   const [analyticsData, setAnalyticsData] = React.useState<any>(null)
   const [financeData, setFinanceData] = React.useState<any>(null)
   const [paymentMethodsData, setPaymentMethodsData] = React.useState<any>(null)
   const [loading, setLoading] = React.useState(true)
+  const [paymentRange, setPaymentRange] = React.useState<{ from: Date; to: Date }>({
+    from: defaultRangeFrom(),
+    to: new Date(),
+  })
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -20,21 +37,13 @@ export default function Page() {
         const month = currentDate.getMonth() + 1
         const year = currentDate.getFullYear()
 
-        const firstDay = new Date(year, currentDate.getMonth(), 1)
-        const lastDay = new Date(year, currentDate.getMonth() + 1, 0)
-        const fmt = (d: Date) => d.toISOString().split('T')[0]
-        const dateFrom = fmt(firstDay)
-        const dateTo = fmt(lastDay)
-
-        const [analyticsRes, financeRes, paymentMethodsRes] = await Promise.all([
+        const [analyticsRes, financeRes] = await Promise.all([
           apiClient.get<any>(`/api/v1/admin/analytics/?month=${month}&year=${year}`).catch(() => null),
           apiClient.get<any>(`/api/v1/admin/analytics/payments?month=${month}&year=${year}`).catch(() => null),
-          apiClient.get<any>(`/api/v1/admin/analytics/payment-methods?date_from=${dateFrom}&date_to=${dateTo}`).catch(() => null),
         ])
 
         setAnalyticsData(analyticsRes)
         setFinanceData(financeRes)
-        setPaymentMethodsData(paymentMethodsRes)
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error)
       } finally {
@@ -43,6 +52,18 @@ export default function Page() {
     }
     fetchData()
   }, [currentDate])
+
+  React.useEffect(() => {
+    const fetchPaymentMethods = async () => {
+      const dateFrom = fmtLocalDate(paymentRange.from)
+      const dateTo = fmtLocalDate(paymentRange.to)
+      const res = await apiClient
+        .get<any>(`/api/v1/admin/analytics/payment-methods?date_from=${dateFrom}&date_to=${dateTo}`)
+        .catch(() => null)
+      setPaymentMethodsData(res)
+    }
+    fetchPaymentMethods()
+  }, [paymentRange])
 
   return (
     <>
@@ -67,6 +88,8 @@ export default function Page() {
           stadiums={financeData?.by_stadium || []}
           dailyPayments={financeData?.daily || []}
           paymentMethods={paymentMethodsData}
+          paymentRange={paymentRange}
+          setPaymentRange={setPaymentRange}
           loading={loading}
         />
       </div>

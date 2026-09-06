@@ -17,9 +17,18 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { PieChart, Pie, Label } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { Button } from "@/components/ui/button"
+import { CalendarIcon } from "lucide-react"
+import * as React from "react"
+import type { DateRange } from "react-day-picker"
 
-export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = [], paymentMethods = null, loading = false }: any) {
+export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = [], paymentMethods = null, paymentRange = null, setPaymentRange = null, loading = false }: any) {
   const formatUZS = (num: number) => num ? new Intl.NumberFormat('ru-RU').format(num) + ' UZS' : '0 UZS'
+  const formatDate = (d: Date) => d.toLocaleDateString('ru-RU')
+  const [rangeOpen, setRangeOpen] = React.useState(false)
+  const [draftRange, setDraftRange] = React.useState<DateRange | undefined>(undefined)
   const formatShort = (num: number) => {
     if (num >= 1_000_000) return (num / 1_000_000).toFixed(1) + 'M'
     if (num >= 1_000) return (num / 1_000).toFixed(0) + 'K'
@@ -132,6 +141,71 @@ export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = []
         </Card>
       </TabsContent>
       <TabsContent value="payment-methods" className="px-4 lg:px-6">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 className="text-sm font-semibold">To'lov usullari bo'yicha tushum</h3>
+            <p className="text-xs text-muted-foreground">Davrni tanlang — Payme va Click orqali rasmiy kelib tushgan pul quyida</p>
+          </div>
+          <Popover
+            open={rangeOpen}
+            onOpenChange={(open) => {
+              setRangeOpen(open)
+              if (open) setDraftRange(paymentRange ? { from: paymentRange.from, to: paymentRange.to } : undefined)
+            }}
+          >
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <CalendarIcon className="h-4 w-4" />
+                {paymentRange ? `${formatDate(paymentRange.from)} — ${formatDate(paymentRange.to)}` : "Sana tanlang"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="range"
+                numberOfMonths={2}
+                selected={draftRange}
+                defaultMonth={paymentRange?.from}
+                disabled={{ after: new Date() }}
+                onSelect={(range) => {
+                  setDraftRange(range)
+                  if (range?.from && range?.to && setPaymentRange) {
+                    setPaymentRange({ from: range.from, to: range.to })
+                    setRangeOpen(false)
+                  }
+                }}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        {(() => {
+          const official = paymentMethods?.official
+          const officialCards = [
+            { name: "Payme", data: official?.payme, color: "var(--color-chart-1)" },
+            { name: "Click", data: official?.click, color: "var(--color-chart-2)" },
+          ]
+          return (
+            <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {officialCards.map((c) => (
+                <Card key={c.name}>
+                  <CardHeader className="pb-2">
+                    <CardDescription className="flex items-center gap-2">
+                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: c.color }} />
+                      {c.name} orqali rasmiy tushum
+                    </CardDescription>
+                    <CardTitle className="text-2xl font-bold tabular-nums">
+                      {formatUZS(c.data?.total || 0)}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0 text-xs text-muted-foreground">
+                    {c.data?.count || 0} ta tranzaksiya · merchant orqali kelib tushgan
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )
+        })()}
+
         {(() => {
           const pm = paymentMethods?.summary
           const total = paymentMethods?.total || 0
