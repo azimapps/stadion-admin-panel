@@ -39,13 +39,13 @@ export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = []
   }
 
   return (
-    <Tabs defaultValue="stadiums" className="w-full flex-col justify-start gap-6">
+    <Tabs defaultValue="payment-methods" className="w-full flex-col justify-start gap-6">
       <div className="flex items-center justify-between px-4 lg:px-6 mb-4">
         <TabsList>
+          <TabsTrigger value="payment-methods">To'lov Usullari</TabsTrigger>
           <TabsTrigger value="stadiums">Stadionlar Daromadi</TabsTrigger>
           <TabsTrigger value="cities">Hududlar (Aktiv Userlar)</TabsTrigger>
           <TabsTrigger value="daily">Kunlik To'lovlar</TabsTrigger>
-          <TabsTrigger value="payment-methods">To'lov Usullari</TabsTrigger>
         </TabsList>
       </div>
 
@@ -143,7 +143,7 @@ export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = []
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <div>
             <h3 className="text-sm font-semibold">To'lov usullari bo'yicha tushum</h3>
-            <p className="text-xs text-muted-foreground">Davrni tanlang — Payme va Click orqali rasmiy kelib tushgan pul quyida</p>
+            <p className="text-xs text-muted-foreground">Tanlangan davr uchun Payme va Click tushumlari</p>
           </div>
           <div className="flex items-center gap-2">
             <Popover open={startOpen} onOpenChange={setStartOpen}>
@@ -192,34 +192,6 @@ export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = []
             </Popover>
           </div>
         </div>
-
-        {(() => {
-          const official = paymentMethods?.official
-          const officialCards = [
-            { name: "Payme", data: official?.payme, color: "var(--color-chart-1)" },
-            { name: "Click", data: official?.click, color: "var(--color-chart-2)" },
-          ]
-          return (
-            <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {officialCards.map((c) => (
-                <Card key={c.name}>
-                  <CardHeader className="pb-2">
-                    <CardDescription className="flex items-center gap-2">
-                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: c.color }} />
-                      {c.name} orqali rasmiy tushum
-                    </CardDescription>
-                    <CardTitle className="text-2xl font-bold tabular-nums">
-                      {formatUZS(c.data?.total || 0)}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0 text-xs text-muted-foreground">
-                    {c.data?.count || 0} ta tranzaksiya · merchant orqali kelib tushgan
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )
-        })()}
 
         {(() => {
           const pm = paymentMethods?.summary
