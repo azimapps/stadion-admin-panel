@@ -22,13 +22,12 @@ import { Calendar } from "@/components/ui/calendar"
 import { Button } from "@/components/ui/button"
 import { CalendarIcon } from "lucide-react"
 import * as React from "react"
-import type { DateRange } from "react-day-picker"
 
 export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = [], paymentMethods = null, paymentRange = null, setPaymentRange = null, loading = false }: any) {
   const formatUZS = (num: number) => num ? new Intl.NumberFormat('ru-RU').format(num) + ' UZS' : '0 UZS'
   const formatDate = (d: Date) => d.toLocaleDateString('ru-RU')
-  const [rangeOpen, setRangeOpen] = React.useState(false)
-  const [draftRange, setDraftRange] = React.useState<DateRange | undefined>(undefined)
+  const [startOpen, setStartOpen] = React.useState(false)
+  const [endOpen, setEndOpen] = React.useState(false)
   const formatShort = (num: number) => {
     if (num >= 1_000_000) return (num / 1_000_000).toFixed(1) + 'M'
     if (num >= 1_000) return (num / 1_000).toFixed(0) + 'K'
@@ -146,36 +145,52 @@ export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = []
             <h3 className="text-sm font-semibold">To'lov usullari bo'yicha tushum</h3>
             <p className="text-xs text-muted-foreground">Davrni tanlang — Payme va Click orqali rasmiy kelib tushgan pul quyida</p>
           </div>
-          <Popover
-            open={rangeOpen}
-            onOpenChange={(open) => {
-              setRangeOpen(open)
-              if (open) setDraftRange(paymentRange ? { from: paymentRange.from, to: paymentRange.to } : undefined)
-            }}
-          >
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <CalendarIcon className="h-4 w-4" />
-                {paymentRange ? `${formatDate(paymentRange.from)} — ${formatDate(paymentRange.to)}` : "Sana tanlang"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <Calendar
-                mode="range"
-                numberOfMonths={2}
-                selected={draftRange}
-                defaultMonth={paymentRange?.from}
-                disabled={{ after: new Date() }}
-                onSelect={(range) => {
-                  setDraftRange(range)
-                  if (range?.from && range?.to && setPaymentRange) {
-                    setPaymentRange({ from: range.from, to: range.to })
-                    setRangeOpen(false)
-                  }
-                }}
-              />
-            </PopoverContent>
-          </Popover>
+          <div className="flex items-center gap-2">
+            <Popover open={startOpen} onOpenChange={setStartOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <CalendarIcon className="h-4 w-4" />
+                  Dan: {paymentRange ? formatDate(paymentRange.from) : "—"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={paymentRange?.from}
+                  defaultMonth={paymentRange?.from}
+                  disabled={{ after: paymentRange?.to || new Date() }}
+                  onSelect={(d) => {
+                    if (d && setPaymentRange) {
+                      setPaymentRange({ from: d, to: paymentRange?.to || new Date() })
+                      setStartOpen(false)
+                    }
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+            <Popover open={endOpen} onOpenChange={setEndOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <CalendarIcon className="h-4 w-4" />
+                  Gacha: {paymentRange ? formatDate(paymentRange.to) : "—"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={paymentRange?.to}
+                  defaultMonth={paymentRange?.to}
+                  disabled={{ before: paymentRange?.from, after: new Date() }}
+                  onSelect={(d) => {
+                    if (d && setPaymentRange) {
+                      setPaymentRange({ from: paymentRange?.from || d, to: d })
+                      setEndOpen(false)
+                    }
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
 
         {(() => {
@@ -208,19 +223,14 @@ export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = []
 
         {(() => {
           const pm = paymentMethods?.summary
-          const total = paymentMethods?.total || 0
 
           const chartMethods = [
             pm?.payme && { name: 'Payme', value: pm.payme.total, count: pm.payme.count, fill: 'var(--color-chart-1)' },
             pm?.click && { name: 'Click', value: pm.click.total, count: pm.click.count, fill: 'var(--color-chart-2)' },
           ].filter(Boolean) as { name: string; value: number; count: number; fill: string }[]
 
-          const cashData = pm?.cash ? { value: pm.cash.total, count: pm.cash.count } : null
-
-          const methods = [
-            ...chartMethods,
-            pm?.cash && { name: 'Naqd Pul', value: pm.cash.total, count: pm.cash.count, fill: 'var(--color-chart-3)' },
-          ].filter(Boolean) as { name: string; value: number; count: number; fill: string }[]
+          const methods = chartMethods
+          const total = methods.reduce((sum, m) => sum + m.value, 0)
 
           const chartConfig: ChartConfig = {
             Payme: { label: 'Payme', color: 'var(--color-chart-1)' },
@@ -276,12 +286,6 @@ export function AnalyticsTables({ cities = [], stadiums = [], dailyPayments = []
                       </Pie>
                     </PieChart>
                   </ChartContainer>
-                  {cashData && (
-                    <div className="mt-2 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                      <span className="h-2 w-2 rounded-full bg-[var(--color-chart-3)]" />
-                      <span>Naqd pul: <span className="font-medium text-foreground">{formatUZS(cashData.value)}</span> · {cashData.count} ta</span>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
 
